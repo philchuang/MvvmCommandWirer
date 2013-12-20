@@ -23,7 +23,7 @@ namespace Demo
 
         // ---------------- OLD WAY TO DO PARAMETERLESS COMMAND --------------------------------------------------------
 
-        public ICommand FooCommand { get; set; }
+        public ICommand FooCommand { get; private set; }
 
         private bool myCanFoo;
         public bool CanFoo
@@ -36,24 +36,18 @@ namespace Demo
             }
         }
 
-
         private void Foo ()
-        {
-            if (CanFoo) Output = "Foo!";
-        }
+        { if (CanFoo) Output = "Foo!"; }
 
         // ---------------- OLD WAY TO DO PARAMETERIZED COMMAND --------------------------------------------------------
 
-        public ICommand BarCommand { get; set; }
+        public ICommand BarCommand { get; private set; }
 
         private bool CanBar (bool enabled)
         { return enabled; }
 
         private void Bar (bool enabled)
-        {
-            if (CanBar(enabled))
-                Output = "Foo!";
-        }
+        { if (CanBar(enabled)) Output = "Bar!"; }
 
         // ---------------- WIRE UP COMMANDS IN CONSTRUCTOR ------------------------------------------------------------
 
@@ -81,19 +75,18 @@ namespace Demo
         // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND --------------------------------------------------------
 
         [CommandProperty(commandType: typeof(DelegateCommand))]
-        public ICommand Foo2Command { get; set; }
+        public ICommand Foo2Command { get; private set; }
 
         [CommandOnInitializeMethod]
         private void InitializeFoo2Command() // TODO figure out how to tell Resharper that this method will get called
         {
             // TODO remove this once CommandCanExecuteMethod is adapted to auto-observe
-            PropertyChanged += (sender, args) =>
-                               {
-                                   if (args.PropertyName == "CanFoo")
-                                   {
-                                       ((DelegateCommand) Foo2Command).InvalidateCanExecuteChanged ();
-                                   }
-                               };
+            PropertyChanged +=
+                (sender, args) =>
+                {
+                    if (args.PropertyName == "CanFoo")
+                        ((DelegateCommand) Foo2Command).InvalidateCanExecuteChanged ();
+                };
         }
 
         [CommandCanExecuteMethod]
@@ -109,15 +102,12 @@ namespace Demo
 
         [CommandExecuteMethod]
         private void Foo2 () // TODO figure out how to tell Resharper that this method will get called
-        {
-            if (CanFoo2)
-                Output = "Foo2!";
-        }
+        { if (CanFoo2) Output = "Foo2!"; }
 
         // ---------------- NEW WAY TO DO PARAMETERIZED COMMAND --------------------------------------------------------
 
         [CommandProperty(commandType: typeof(DelegateCommand<bool>), paramType: typeof(bool))]
-        public ICommand Bar2Command { get; set; }
+        public ICommand Bar2Command { get; private set; }
 
         [CommandCanExecuteMethod]
         private bool CanBar2 (bool enabled)
@@ -125,10 +115,7 @@ namespace Demo
 
         [CommandExecuteMethod]
         private void Bar2(bool enabled) // TODO figure out how to tell Resharper that this method will get called
-        {
-            if (CanBar2(enabled))
-                Output = "Bar2!";
-        }
+        { if (CanBar2(enabled)) Output = "Bar2!"; }
 
         // ---------------- DEMO-SPECIFIC COMMANDS ---------------------------------------------------------------------
 

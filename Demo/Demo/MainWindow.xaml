@@ -29,8 +29,8 @@
         </Grid.ColumnDefinitions>
         
         <Button Grid.Row="0" Grid.Column="0" Content="Foo" Command="{Binding FooCommand}" />
-        <!-- have to invert because CommandParameter is sending an old version of the value! -->
-        <Button Grid.Row="0" Grid.Column="2" Content="Bar" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter, Converter={StaticResource InverseBoolConverter}}" />
+        <!-- TODO get CommandParameter to work properly, the binding is somehow using the previous value when BarParameter is changed -->
+        <Button Grid.Row="0" Grid.Column="2" Content="Bar" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter}" />
 
         <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Foo</TextBlock>
         <CheckBox  Grid.Row="1" Grid.Column="2" IsChecked="{Binding CanFoo}" VerticalAlignment="Center" />
@@ -39,8 +39,8 @@
         <CheckBox  Grid.Row="2" Grid.Column="2" IsChecked="{Binding BarParameter}" VerticalAlignment="Center" />
         
         <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Command="{Binding Foo2Command}" />
-        <!-- have to invert because CommandParameter is sending an old version of the value! -->
-        <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter, Converter={StaticResource InverseBoolConverter}}" />
+        <!-- TODO get CommandParameter to work properly, the binding is somehow using the previous value when BarParameter is changed -->
+        <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
 
         <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
         <TextBox   Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Output}" Margin="5,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
