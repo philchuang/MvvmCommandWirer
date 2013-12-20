@@ -1,0 +1,48 @@
+﻿<Window x:Class="Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:demo="clr-namespace:Demo"
+        xmlns:utils="clr-namespace:Demo.Utils"
+        mc:Ignorable="d" 
+        d:DataContext="{Binding Source={d:DesignInstance Type=demo:MainWindowViewModel, IsDesignTimeCreatable=True}}"
+        Title="CommandWirer example" Height="350" Width="525">
+    
+    <Window.Resources>
+        <utils:InverseBoolConverter x:Key="InverseBoolConverter" />
+    </Window.Resources>
+    
+    <Grid Margin="5,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="50" />
+            <RowDefinition Height="50" />
+            <RowDefinition Height="50" />
+            <RowDefinition Height="25" />
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        
+        <Button Grid.Row="0" Grid.Column="0" Content="Foo" Command="{Binding FooCommand}" />
+        <!-- have to invert because CommandParameter is sending an old version of the value! -->
+        <Button Grid.Row="0" Grid.Column="2" Content="Bar" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter, Converter={StaticResource InverseBoolConverter}}" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Foo</TextBlock>
+        <CheckBox  Grid.Row="1" Grid.Column="2" IsChecked="{Binding CanFoo}" VerticalAlignment="Center" />
+        
+        <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Bar</TextBlock>
+        <CheckBox  Grid.Row="2" Grid.Column="2" IsChecked="{Binding BarParameter}" VerticalAlignment="Center" />
+        
+        <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Command="{Binding Foo2Command}" />
+        <!-- have to invert because CommandParameter is sending an old version of the value! -->
+        <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter, Converter={StaticResource InverseBoolConverter}}" />
+
+        <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
+        <TextBox   Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Output}" Margin="5,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+    </Grid>
+</Window>
