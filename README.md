@@ -106,3 +106,8 @@ Implemented Features:
 TO DO:
 * Parameterized Commands
 * async/await handling
+
+Shout-outs
+----------
+
+Thanks to [XAML BLOG](http://xamlblog.tumblr.com/post/46187145555/fixing-mvvm-part-1-commands) for the inspiration!
