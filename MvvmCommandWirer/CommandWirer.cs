@@ -58,6 +58,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                         || CanExecute.GetParameters()[0].ParameterType != ParameterType)
                         throw new InvalidOperationException("CommandProperty.ParameterType is defined but does not match parameters for CommandCanExecuteMethod for key: \"{0}\"".FormatWith(Key));
 
+                    return;
                     // TODO implement
                     //canExecuteDelegate = CanExecute.CreateDelegate(typeof(Func<,>).MakeGenericType(ParameterType, typeof(bool)));
                 }
@@ -71,6 +72,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 // alternative way: dynamically create CanExecute MethodInfo if null then run above if block
                 if (ParameterType != null)
                 {
+                    return;
                     // TODO implement
                     //var call = Expression.Call (GetReturnTrueMethodInfo ());
                     //var lambda = Expression.Lambda (call);
@@ -82,7 +84,6 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 }
                 else
                 {
-                    // TODO test
                     canExecuteDelegate = (Func<bool>)(() => true);
                 }
             }
@@ -90,6 +91,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             Delegate executeDelegate = null; // needs to be Action or Action<{ParameterType}>
             if (ParameterType != null)
             {
+                return;
                 // TODO create Action<ParameterType> dynamically
                 //executeDelegate = Execute.CreateDelegate(typeof(Action<>).MakeGenericType(ParameterType));
             }
@@ -182,13 +184,5 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             foreach (var helper in helperMap.Values)
                 helper.Wire();
         }
-
-        //private bool ReturnTrue ()
-        //{ return true; }
-
-        //private MethodInfo GetReturnTrueMethodInfo ()
-        //{
-        //    return GetType ().GetMethod ("ReturnTrue", BindingFlags.Instance);
-        //}
     }
 }
