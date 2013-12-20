@@ -101,6 +101,7 @@ This is very much a work-in-progress.
 Implemented Features:
 * Parameterless Commands
 * CanExecute method is optional, will default to always return true
+* CanExecute method can be a Method or a Property
 
 TO DO:
 * Parameterized Commands
