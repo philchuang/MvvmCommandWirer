@@ -69,22 +69,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
             else
             {
-                // alternative way: dynamically create CanExecute MethodInfo if null then run above if block
                 if (ParameterType != null)
                 {
-                    // TODO get this working
-                    canExecuteDelegate = Delegate.CreateDelegate (
-                        typeof (Func<,>).MakeGenericType (ParameterType, typeof (bool)), 
-                        InvokeOn, 
-                        ((Func<bool>) (() => true)).Method);
-
-                    //var call = Expression.Call (GetReturnTrueMethodInfo ());
-                    //var lambda = Expression.Lambda (call);
-                    //canExecuteDelegate = lambda.Compile ();
-
-                    // is this going to work? the underlying method is Func<bool> but trying to create a delegate that is Func<{ParameterType}, bool>
-                    //canExecuteDelegate = ((Func<bool>)(() => true)).GetMethodInfo()
-                    //                                                .CreateDelegate(typeof(Func<,>).MakeGenericType(ParameterType, typeof(bool)));
+                    // TODO make wrapMethodInfo(w/o MakeGenericMethod) static field and get the method name via Expression reflection
+                    var wrapMethodInfo = typeof (CommandWirer).GetMethod ("WrapFuncBool", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod (ParameterType);
+                    canExecuteDelegate = (Delegate) wrapMethodInfo.Invoke (this, new object[] { (Func<bool>) (() => true) });
                 }
                 else
                 {
@@ -132,6 +121,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     InitializationMethod.Invoke (InvokeOn, null);
                 }
             }
+        }
+
+        private static Func<T, bool> WrapFuncBool<T> (Func<bool> func)
+        {
+            return _ => func ();
         }
 
         public static void WireAll(Object toWire)

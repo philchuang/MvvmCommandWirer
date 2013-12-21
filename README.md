@@ -108,7 +108,6 @@ Caveats:
 * If using CommandPropertyAttribute to instantiate the ICommand, it needs to have a constructor that accepts (Action, Func<bool>) or (Action<T>, Func<T,bool>). Otherwise, use the CommandInstantiationMethod attribute to declare the method that will instantiate the Command.
 
 TO DO:
-* Default CanExecute
 * async/await handling
 
 Shout-outs

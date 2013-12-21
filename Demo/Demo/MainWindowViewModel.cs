@@ -97,7 +97,7 @@ namespace Demo
         private void Foo2 ()
         { if (CanFoo2) Output = "Foo2!"; }
 
-        // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND WITH DEFAULT CANEXECUTE---------------------------------
+        // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND WITH DEFAULT CANEXECUTE --------------------------------
 
         [CommandProperty (commandType: typeof (DelegateCommand))]
         public ICommand Foo3Command { get; private set; }
