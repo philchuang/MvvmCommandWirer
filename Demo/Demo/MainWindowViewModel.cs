@@ -73,17 +73,19 @@ namespace Demo
             CommandWirer.WireAll (this);
         }
 
+        // TODO figure out how to tell Resharper that the methods will get called via reflection
+
         // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND --------------------------------------------------------
 
         [CommandProperty (commandType: typeof (DelegateCommand))]
-        public ICommand Foo2Command { get; private set; } // TODO figure out how to tell Resharper that the set method will get called
+        public ICommand Foo2Command { get; private set; }
 
-        [CommandOnInitializeMethod]
-        private void InitializeFoo2Command () // TODO figure out how to tell Resharper that this method will get called
+        [CommandInitializationMethod]
+        private void InitializeFoo2Command (ICommand command)
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "CanFoo")
-                                               ((DelegateCommand) Foo2Command).InvalidateCanExecuteChanged ();
+                                               ((DelegateCommand) command).InvalidateCanExecuteChanged ();
                                        };
         }
 
@@ -92,21 +94,67 @@ namespace Demo
         { get { return myCanFoo; } }
 
         [CommandExecuteMethod]
-        private void Foo2 () // TODO figure out how to tell Resharper that this method will get called
+        private void Foo2 ()
         { if (CanFoo2) Output = "Foo2!"; }
+
+        // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND WITH DEFAULT CANEXECUTE---------------------------------
+
+        [CommandProperty (commandType: typeof (DelegateCommand))]
+        public ICommand Foo3Command { get; private set; }
+
+        [CommandExecuteMethod]
+        private void Foo3 ()
+        { Output = "Foo3!"; }
 
         // ---------------- NEW WAY TO DO PARAMETERIZED COMMAND --------------------------------------------------------
 
         [CommandProperty (commandType: typeof (DelegateCommand<String>), paramType: typeof (String))]
-        public ICommand Bar2Command { get; private set; } // TODO figure out how to tell Resharper that the set method will get called
+        public ICommand Bar2Command { get; private set; }
+
+        [CommandInitializationMethod]
+        private void InitializeBar2Command (DelegateCommand<String> command) // method parameter can be anything that impls ICommand
+        {
+            PropertyChangedInternal += (sender, args) => {
+                                           if (args.PropertyName == "BarParameter")
+                                               command.InvalidateCanExecuteChanged ();
+                                       };
+        }
 
         [CommandCanExecuteMethod]
         private bool CanBar2 (String barParameter)
         { return CanBar (barParameter); }
 
         [CommandExecuteMethod]
-        private void Bar2 (String barParameter) // TODO figure out how to tell Resharper that this method will get called
+        private void Bar2 (String barParameter)
         { if (CanBar2 (barParameter)) Output = "Bar2! + " + barParameter; }
+
+        // ---------------- NEW WAY TO DO PARAMETERIZED COMMAND WITH INSTANTIATION METHOD ------------------------------
+
+        [CommandProperty (paramType: typeof (String))]
+        public ICommand Bar3Command { get; private set; }
+
+        [CommandInstantiationMethod]
+        private ICommand InstantiateBar3Command (Action<String> execute, Func<String, bool> canExecute)
+        {
+            return new DelegateCommand<String> (execute, canExecute);
+        }
+
+        [CommandInitializationMethod]
+        private void InitializeBar3Command () // method parameter is optional
+        {
+            PropertyChangedInternal += (sender, args) => {
+                                           if (args.PropertyName == "BarParameter")
+                                               ((DelegateCommand) Bar3Command).InvalidateCanExecuteChanged ();
+                                       };
+        }
+
+        [CommandCanExecuteMethod]
+        private bool CanBar3 (String barParameter)
+        { return CanBar (barParameter); }
+
+        [CommandExecuteMethod]
+        private void Bar3 (String barParameter)
+        { if (CanBar3 (barParameter)) Output = "Bar3! + " + barParameter; }
 
         // ---------------- DEMO PROPERTIES ----------------------------------------------------------------------------
 

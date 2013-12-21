@@ -53,11 +53,34 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         }
     }
 
-    public class CommandOnInitializeMethodAttribute : CommandWirerAttribute
+    public class CommandInstantiationMethodAttribute : CommandWirerAttribute
     {
-        public CommandOnInitializeMethodAttribute() { }
+        public CommandInstantiationMethodAttribute () { }
 
-        public CommandOnInitializeMethodAttribute(String key) : base(key) { }
+        public CommandInstantiationMethodAttribute (String key) : base (key) { }
+
+        public override void SetKeyFromMethodName (String methodName)
+        {
+            if (!Key.IsNullOrBlank ()) return;
+            methodName.ThrowIfNullOrBlank ("methodName");
+
+            var initPrefixMatch = Regex.Match (methodName, @"^(?:Instantiate|Create)([A-Z].*?)(?:Command)?$");
+            var initSuffixMatch = Regex.Match (methodName, @"^([A-Z].*?)(?:Command)?(?:Instantiate|Instantiation|Create)$");
+
+            if (initPrefixMatch.Success && initPrefixMatch.Groups.Count == 2)
+                Key = initPrefixMatch.Groups[1].Value;
+            else if (initSuffixMatch.Success && initSuffixMatch.Groups.Count == 2)
+                Key = initSuffixMatch.Groups[1].Value;
+            else
+                throw new ArgumentException ("Expecting method name like \"Instantiate[Key]Command\"");
+        }
+    }
+
+    public class CommandInitializationMethodAttribute : CommandWirerAttribute
+    {
+        public CommandInitializationMethodAttribute() { }
+
+        public CommandInitializationMethodAttribute(String key) : base(key) { }
 
         public override void SetKeyFromMethodName(String methodName)
         {
@@ -75,8 +98,6 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 throw new ArgumentException("Expecting method name like \"Initialize[Key]Command\"");
         }
     }
-
-    // TODO allow CommandCanExecuteMethodAttribute to be attached to a bool Property
 
     public class CommandCanExecuteMethodAttribute : CommandWirerAttribute
     {

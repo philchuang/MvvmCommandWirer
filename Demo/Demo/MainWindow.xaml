@@ -6,10 +6,11 @@
         xmlns:demo="clr-namespace:Demo"
         mc:Ignorable="d" 
         d:DataContext="{Binding Source={d:DesignInstance Type=demo:MainWindowViewModel, IsDesignTimeCreatable=True}}"
-        Title="CommandWirer example" Height="350" Width="525">
+        Title="CommandWirer example" Height="400" Width="525">
         
     <Grid Margin="5,10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
             <RowDefinition Height="50" />
             <RowDefinition Height="50" />
             <RowDefinition Height="50" />
@@ -22,20 +23,23 @@
             <ColumnDefinition Width="10" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
-        <Button Grid.Row="0" Grid.Column="0" Content="Foo" Command="{Binding FooCommand}" />
-        <Button Grid.Row="0" Grid.Column="2" Content="Bar" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter}" />
 
-        <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Foo</TextBlock>
-        <CheckBox  Grid.Row="1" Grid.Column="2" IsChecked="{Binding CanFoo}" VerticalAlignment="Center" />
-        
-        <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Bar Parameter</TextBlock>
-        <TextBox   Grid.Row="2" Grid.Column="2" Text="{Binding BarParameter, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Margin="5,10" />
-        
-        <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Command="{Binding Foo2Command}" />
-        <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
+        <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Foo</TextBlock>
+        <CheckBox  Grid.Row="0" Grid.Column="2" IsChecked="{Binding CanFoo}" VerticalAlignment="Center" />
 
-        <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
-        <TextBox   Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Output}" Margin="5,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Bar Parameter</TextBlock>
+        <TextBox   Grid.Row="1" Grid.Column="2" Text="{Binding BarParameter, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Margin="5,10" />
+
+        <Button Grid.Row="2" Grid.Column="0" Content="Foo" Margin="5,10" Command="{Binding FooCommand}" />
+        <Button Grid.Row="2" Grid.Column="2" Content="Bar" Margin="5,10" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter}" />
+
+        <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Margin="5,10" Command="{Binding Foo2Command}" />
+        <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Margin="5,10" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
+
+        <Button Grid.Row="4" Grid.Column="0" Content="Foo3" Margin="5,10" Command="{Binding Foo3Command}" />
+        <Button Grid.Row="4" Grid.Column="2" Content="Bar3" Margin="5,10" Command="{Binding Bar3Command}" CommandParameter="{Binding BarParameter}" />
+
+        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
+        <TextBox   Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Output}" Margin="5,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     </Grid>
 </Window>

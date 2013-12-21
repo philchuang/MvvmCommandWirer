@@ -56,13 +56,13 @@ Could there be a cleaner way? That's the goal of this utility:
 	public ICommand FooCommand { get; private set; }
 
 	// 4. Initialization
-	[CommandOnInitializeMethod]
-	private void InitializeFooCommand()
+	[CommandInitializationMethod]
+	private void InitializeFooCommand(DelegateCommand command)
 	{
 		PropertyChanged +=
 			(sender, args) =>
 				if (args.PropertyName == "CanFoo")
-					((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
+					command.InvalidateCanExecuteChanged ();
 	}
 
 	private bool myCanFoo;
@@ -99,12 +99,16 @@ Status
 This is very much a work-in-progress.
 
 Implemented Features:
-* Parameterless Commands
+* Parameterless and Parameterized Commands
+* Custom instantiation and initialization methods
 * CanExecute method is optional, will default to always return true
 * CanExecute method can be a Method or a Property
 
+Caveats:
+* If using CommandPropertyAttribute to instantiate the ICommand, it needs to have a constructor that accepts (Action, Func<bool>) or (Action<T>, Func<T,bool>). Otherwise, use the CommandInstantiationMethod attribute to declare the method that will instantiate the Command.
+
 TO DO:
-* Parameterized Commands
+* Default CanExecute
 * async/await handling
 
 Shout-outs

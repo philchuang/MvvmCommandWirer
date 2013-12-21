@@ -24,11 +24,13 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         public Type ParameterType { get; set; }
 
-        public MethodInfo OnInitialize { get; set; }
+        public MethodInfo InstantiationMethod { get; set; }
 
-        public MethodInfo CanExecute { get; set; }
+        public MethodInfo InitializationMethod { get; set; }
 
-        public MethodInfo Execute { get; set; }
+        public MethodInfo CanExecuteMethod { get; set; }
+
+        public MethodInfo ExecuteMethod { get; set; }
 
         // TODO TEST with async
 
@@ -40,31 +42,29 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             if (InvokeOn == null)
                 throw new InvalidOperationException("{0} requires an InvokeOn value for key: \"{1}\"".FormatWith(GetType().Name, Key));
 
-            if (CommandType == null && OnInitialize == null)
-                throw new InvalidOperationException("Either CommandProperty.CommandType or CommandOnInitialize must be defined for key: \"{0}\"".FormatWith(Key));
+            if (CommandType == null && InstantiationMethod == null)
+                throw new InvalidOperationException("Either CommandProperty.CommandType or CommandInstantiationMethod must be defined for key: \"{0}\"".FormatWith(Key));
 
-            if (Execute == null)
+            if (ExecuteMethod == null)
                 throw new InvalidOperationException("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith(Key));
 
             Delegate canExecuteDelegate = null; // needs to be Func<bool> or Func<{ParameterType}, bool>
-            if (CanExecute != null)
+            if (CanExecuteMethod != null)
             {
-                if (CanExecute.ReturnType != typeof(bool))
+                if (CanExecuteMethod.ReturnType != typeof(bool))
                     throw new InvalidOperationException("CommandCanExecuteMethod must have a bool return type for key: \"{0}\"".FormatWith(Key));
 
                 if (ParameterType != null)
                 {
-                    if (CanExecute.GetParameters().Count() != 1
-                        || CanExecute.GetParameters()[0].ParameterType != ParameterType)
+                    if (CanExecuteMethod.GetParameters().Count() != 1
+                        || CanExecuteMethod.GetParameters()[0].ParameterType != ParameterType)
                         throw new InvalidOperationException("CommandProperty.ParameterType is defined but does not match parameters for CommandCanExecuteMethod for key: \"{0}\"".FormatWith(Key));
 
-                    return;
-                    // TODO implement
-                    //canExecuteDelegate = CanExecute.CreateDelegate(typeof(Func<,>).MakeGenericType(ParameterType, typeof(bool)));
+                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (ParameterType, typeof (bool)), InvokeOn, CanExecuteMethod);
                 }
                 else
                 {
-                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<bool>), InvokeOn, CanExecute);
+                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<bool>), InvokeOn, CanExecuteMethod);
                 }
             }
             else
@@ -72,8 +72,12 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 // alternative way: dynamically create CanExecute MethodInfo if null then run above if block
                 if (ParameterType != null)
                 {
-                    return;
-                    // TODO implement
+                    // TODO get this working
+                    canExecuteDelegate = Delegate.CreateDelegate (
+                        typeof (Func<,>).MakeGenericType (ParameterType, typeof (bool)), 
+                        InvokeOn, 
+                        ((Func<bool>) (() => true)).Method);
+
                     //var call = Expression.Call (GetReturnTrueMethodInfo ());
                     //var lambda = Expression.Lambda (call);
                     //canExecuteDelegate = lambda.Compile ();
@@ -84,31 +88,49 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 }
                 else
                 {
-                    canExecuteDelegate = (Func<bool>)(() => true);
+                    canExecuteDelegate = (Func<bool>) (() => true);
                 }
             }
 
             Delegate executeDelegate = null; // needs to be Action or Action<{ParameterType}>
             if (ParameterType != null)
             {
-                return;
-                // TODO create Action<ParameterType> dynamically
-                //executeDelegate = Execute.CreateDelegate(typeof(Action<>).MakeGenericType(ParameterType));
+                executeDelegate = Delegate.CreateDelegate (typeof (Action<>).MakeGenericType (ParameterType), InvokeOn, ExecuteMethod);
             }
             else
             {
-                executeDelegate = Delegate.CreateDelegate(typeof(Action), InvokeOn, Execute);
+                executeDelegate = Delegate.CreateDelegate(typeof(Action), InvokeOn, ExecuteMethod);
             }
 
-            if (CommandType != null)
+            Object command = null;
+            if (InstantiationMethod != null)
             {
-                var command = Activator.CreateInstance(CommandType, executeDelegate, canExecuteDelegate);
-                CommandProperty.SetValue(InvokeOn, command, null);
+                command = InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate, canExecuteDelegate });
             }
-
-            if (OnInitialize != null)
+            else if (CommandType != null)
             {
-                OnInitialize.Invoke(InvokeOn, null);
+                command = Activator.CreateInstance(CommandType, executeDelegate, canExecuteDelegate);
+            }
+            else
+            {
+                throw new InvalidOperationException (String.Format ("Did not have an Command instantiation method for key: \"{0}\"", Key));
+            }
+            CommandProperty.SetValue (InvokeOn, command, null);
+
+            if (InitializationMethod != null)
+            {
+                if (InitializationMethod.GetParameters ().Count () == 1)
+                {
+                    var paramType = InitializationMethod.GetParameters ().First ().ParameterType;
+                    if (!paramType.IsInstanceOfType (command))
+                        throw new InvalidOperationException (String.Format ("Unable to pass {0} as {1} parameter to {2}", command.GetType ().Name, paramType.Name, InitializationMethod.Name));
+
+                    InitializationMethod.Invoke (InvokeOn, new[] { command });
+                }
+                else
+                {
+                    InitializationMethod.Invoke (InvokeOn, null);
+                }
             }
         }
 
@@ -142,7 +164,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     var canExecuteMethodAttr = attr as CommandCanExecuteMethodAttribute;
                     if (canExecuteMethodAttr != null)
                     {
-                        helper.CanExecute = prop.GetGetMethod ();
+                        helper.CanExecuteMethod = prop.GetGetMethod ();
                         continue;
                     }
                 }
@@ -158,24 +180,35 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     if (!helperMap.TryGetValue (attr.Key, out helper))
                         helperMap[attr.Key] = helper = new CommandWirer {Key = attr.Key};
 
+                    var createAttr = attr as CommandInstantiationMethodAttribute;
+                    if (createAttr != null)
+                    {
+                        // TODO validate that method has expected parameters & return type
+                        helper.InstantiationMethod = method;
+                        continue;
+                    }
+
+                    var initAttr = attr as CommandInitializationMethodAttribute;
+                    if (initAttr != null)
+                    {
+                        // TODO validate that if method is not parameterless, that it only has 1 parameter that implements ICommand
+                        helper.InitializationMethod = method;
+                        continue;
+                    }
                     var canExecuteAttr = attr as CommandCanExecuteMethodAttribute;
                     if (canExecuteAttr != null)
                     {
-                        helper.CanExecute = method;
+                        // TODO validate that method returns bool
+                        // TODO validate that method has 0 or 1 parameters
+                        helper.CanExecuteMethod = method;
                         continue;
                     }
 
                     var executeAttr = attr as CommandExecuteMethodAttribute;
                     if (executeAttr != null)
                     {
-                        helper.Execute = method;
-                        continue;
-                    }
-
-                    var onInitAttr = attr as CommandOnInitializeMethodAttribute;
-                    if (onInitAttr != null)
-                    {
-                        helper.OnInitialize = method;
+                        // TODO validate that method has 0 or 1 parameters
+                        helper.ExecuteMethod = method;
                         continue;
                     }
                 }
