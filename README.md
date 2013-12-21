@@ -3,7 +3,7 @@ MvvmCommandWirer
 
 What is it?
 -----------
-Utility for attribute-based wiring-up of MVVM Commands
+Portable Class Library for attribute-based wiring-up of MVVM Commands. Targets .NET 4.5, SL 4+, WP7+, Windows Store.
 
 Why would I want to use it?
 ---------------------------
@@ -37,7 +37,7 @@ For instance:
 	private void Foo ()
 	{ if (CanFoo) Output = "Foo!"; }
 
-	// ... dozens of lines later ...
+	// ... many lines later ...
 
 	public MyViewModel ()
 	{
@@ -46,7 +46,7 @@ For instance:
 		PropertyChanged +=
 			(sender, args) =>
 				if (args.PropertyName == "CanFoo")
-					((DelegateCommand) Foo2Command).InvalidateCanExecuteChanged ();
+					((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
 	}
 
 Could there be a cleaner way? That's the goal of this utility:
@@ -62,7 +62,7 @@ Could there be a cleaner way? That's the goal of this utility:
 		PropertyChanged +=
 			(sender, args) =>
 				if (args.PropertyName == "CanFoo")
-					((DelegateCommand) Foo2Command).InvalidateCanExecuteChanged ();
+					((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
 	}
 
 	private bool myCanFoo;
