@@ -4,7 +4,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:demo="clr-namespace:Demo"
-        xmlns:utils="clr-namespace:Demo.Utils"
         mc:Ignorable="d" 
         d:DataContext="{Binding Source={d:DesignInstance Type=demo:MainWindowViewModel, IsDesignTimeCreatable=True}}"
         Title="CommandWirer example" Height="350" Width="525">
@@ -25,17 +24,15 @@
         </Grid.ColumnDefinitions>
         
         <Button Grid.Row="0" Grid.Column="0" Content="Foo" Command="{Binding FooCommand}" />
-        <!-- TODO get CommandParameter to work properly, the binding is somehow using the previous value when BarParameter is changed -->
         <Button Grid.Row="0" Grid.Column="2" Content="Bar" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter}" />
 
         <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Foo</TextBlock>
         <CheckBox  Grid.Row="1" Grid.Column="2" IsChecked="{Binding CanFoo}" VerticalAlignment="Center" />
         
-        <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Enable Bar</TextBlock>
-        <CheckBox  Grid.Row="2" Grid.Column="2" IsChecked="{Binding BarParameter}" VerticalAlignment="Center" />
+        <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center">Bar Parameter</TextBlock>
+        <TextBox   Grid.Row="2" Grid.Column="2" Text="{Binding BarParameter, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center" Margin="5,10" />
         
         <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Command="{Binding Foo2Command}" />
-        <!-- TODO get CommandParameter to work properly, the binding is somehow using the previous value when BarParameter is changed -->
         <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
 
         <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
