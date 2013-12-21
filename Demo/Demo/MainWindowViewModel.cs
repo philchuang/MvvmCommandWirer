@@ -32,7 +32,8 @@ namespace Demo
             set
             {
                 myCanFoo = value;
-                RaisePropertyChanged();
+                RaisePropertyChanged ();
+                CanFoo2 = value; // link CanFoo to CanFoo2
             }
         }
 
@@ -47,56 +48,57 @@ namespace Demo
         { return enabled; }
 
         private void Bar (bool enabled)
-        { if (CanBar(enabled)) Output = "Bar!"; }
+        { if (CanBar (enabled)) Output = "Bar!"; }
 
         // ---------------- WIRE UP COMMANDS IN CONSTRUCTOR ------------------------------------------------------------
 
-        public MainWindowViewModel()
+        public MainWindowViewModel ()
         {
             // ------------ OLD WAY ------------------------------------------------------------------------------------
-            FooCommand = new DelegateCommand(Foo, () => CanFoo);
-            BarCommand = new DelegateCommand<bool>(Bar, CanBar);
-            PropertyChanged += (sender, args) =>
-                               {
-                                   if (args.PropertyName == "CanFoo")
-                                   {
-                                       ((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
-                                   }
-                                   else if (args.PropertyName == "BarParameter")
-                                   {
-                                       ((DelegateCommand) BarCommand).InvalidateCanExecuteChanged ();
-                                   }
-                               };
+            FooCommand = new DelegateCommand (Foo, () => CanFoo);
+            BarCommand = new DelegateCommand<bool> (Bar, CanBar);
+            
+            PropertyChanged +=
+                (sender, args) => {
+                    if (args.PropertyName == "CanFoo")
+                    {
+                        ((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
+                    }
+                    else if (args.PropertyName == "BarParameter")
+                    {
+                        ((DelegateCommand) BarCommand).InvalidateCanExecuteChanged ();
+                    }
+                };
 
             // ------------ NEW WAY ------------------------------------------------------------------------------------
-            CommandWirer.WireAll(this);
+            CommandWirer.WireAll (this);
         }
 
         // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND --------------------------------------------------------
 
-        [CommandProperty(commandType: typeof(DelegateCommand))]
-        public ICommand Foo2Command { get; private set; }
+        [CommandProperty (commandType: typeof (DelegateCommand))]
+        public ICommand Foo2Command { get; private set; } // TODO figure out how to tell Resharper that the set method will get called
 
         [CommandOnInitializeMethod]
-        private void InitializeFoo2Command() // TODO figure out how to tell Resharper that this method will get called
+        private void InitializeFoo2Command () // TODO figure out how to tell Resharper that this method will get called
         {
             // TODO remove this once CommandCanExecuteMethod is adapted to auto-observe
             PropertyChanged +=
-                (sender, args) =>
-                {
-                    if (args.PropertyName == "CanFoo")
+                (sender, args) => {
+                    if (args.PropertyName == "CanFoo2")
                         ((DelegateCommand) Foo2Command).InvalidateCanExecuteChanged ();
                 };
         }
 
+        private bool myCanFoo2;
         [CommandCanExecuteMethod]
         public bool CanFoo2
         {
-            get { return myCanFoo; }
+            get { return myCanFoo2; }
             set
             {
-                CanFoo = value;
-                RaisePropertyChanged();
+                myCanFoo2 = value;
+                RaisePropertyChanged ();
             }
         }
 
@@ -106,16 +108,16 @@ namespace Demo
 
         // ---------------- NEW WAY TO DO PARAMETERIZED COMMAND --------------------------------------------------------
 
-        [CommandProperty(commandType: typeof(DelegateCommand<bool>), paramType: typeof(bool))]
-        public ICommand Bar2Command { get; private set; }
+        [CommandProperty (commandType: typeof (DelegateCommand<bool>), paramType: typeof (bool))]
+        public ICommand Bar2Command { get; private set; } // TODO figure out how to tell Resharper that the set method will get called
 
         [CommandCanExecuteMethod]
         private bool CanBar2 (bool enabled)
         { return enabled; }
 
         [CommandExecuteMethod]
-        private void Bar2(bool enabled) // TODO figure out how to tell Resharper that this method will get called
-        { if (CanBar2(enabled)) Output = "Bar2!"; }
+        private void Bar2 (bool enabled) // TODO figure out how to tell Resharper that this method will get called
+        { if (CanBar2 (enabled)) Output = "Bar2!"; }
 
         // ---------------- DEMO-SPECIFIC COMMANDS ---------------------------------------------------------------------
 
@@ -126,7 +128,7 @@ namespace Demo
             set
             {
                 myBarParameter = value;
-                RaisePropertyChanged();
+                RaisePropertyChanged ();
             }
         }
 
@@ -136,8 +138,8 @@ namespace Demo
             get { return myOutput; }
             set
             {
-                myOutput = value;
-                RaisePropertyChanged();
+                myOutput = String.Format ("{0:o} {1}", DateTime.Now, value);
+                RaisePropertyChanged ();
             }
         }
     }

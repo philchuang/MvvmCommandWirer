@@ -8,11 +8,7 @@
         mc:Ignorable="d" 
         d:DataContext="{Binding Source={d:DesignInstance Type=demo:MainWindowViewModel, IsDesignTimeCreatable=True}}"
         Title="CommandWirer example" Height="350" Width="525">
-    
-    <Window.Resources>
-        <utils:InverseBoolConverter x:Key="InverseBoolConverter" />
-    </Window.Resources>
-    
+        
     <Grid Margin="5,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />
