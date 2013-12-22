@@ -68,7 +68,7 @@ namespace Demo
                                            if (args.PropertyName == "BarParameter")
                                                ((DelegateCommand) BarCommand).InvalidateCanExecuteChanged ();
                                        };
-            
+
             // ------------ NEW WAY TO INITIALIZE ----------------------------------------------------------------------
             CommandWirer.WireAll (this);
         }
@@ -81,7 +81,7 @@ namespace Demo
         public ICommand Foo2Command { get; private set; }
 
         [CommandInitializationMethod]
-        private void InitializeFoo2Command (ICommand command)
+        private void InitializeFoo2Command (ICommand command) // CommandInitializationMethod can pass the instantiated Command
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "CanFoo")
@@ -89,7 +89,7 @@ namespace Demo
                                        };
         }
 
-        [CommandCanExecuteMethod]
+        [CommandCanExecuteMethod] // CommandCanExecuteMethod can be used on Property
         public bool CanFoo2
         { get { return myCanFoo; } }
 
@@ -102,6 +102,8 @@ namespace Demo
         [CommandProperty (commandType: typeof (DelegateCommand))]
         public ICommand Foo3Command { get; private set; }
 
+        // no CommandCanExecuteMethod here, so CommandWirer only returns true
+
         [CommandExecuteMethod]
         private void Foo3 ()
         { Output = "Foo3!"; }
@@ -112,7 +114,7 @@ namespace Demo
         public ICommand Bar2Command { get; private set; }
 
         [CommandInitializationMethod]
-        private void InitializeBar2Command (DelegateCommand<String> command) // method parameter can be anything that impls ICommand
+        private void InitializeBar2Command (DelegateCommand<String> command) // method parameter can be anything that implements ICommand
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "BarParameter")
@@ -133,11 +135,9 @@ namespace Demo
         [CommandProperty (paramType: typeof (String))]
         public ICommand Bar3Command { get; private set; }
 
-        [CommandInstantiationMethod]
+        [CommandInstantiationMethod] // custom instantiation method instead of relying on CommandWirer's reflection logic
         private ICommand InstantiateBar3Command (Action<String> execute, Func<String, bool> canExecute)
-        {
-            return new DelegateCommand<String> (execute, canExecute);
-        }
+        { return new DelegateCommand<String> (execute, canExecute); }
 
         [CommandInitializationMethod]
         private void InitializeBar3Command () // method parameter is optional

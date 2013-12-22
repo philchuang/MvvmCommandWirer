@@ -34,31 +34,31 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         // TODO TEST with async
 
-        public void Wire()
+        public void Wire ()
         {
             if (CommandProperty == null)
-                throw new InvalidOperationException("{0} requires an CommandProperty value for key: \"{1}\"".FormatWith(GetType().Name, Key));
+                throw new InvalidOperationException ("{0} requires an CommandProperty value for key: \"{1}\"".FormatWith (GetType ().Name, Key));
 
             if (InvokeOn == null)
-                throw new InvalidOperationException("{0} requires an InvokeOn value for key: \"{1}\"".FormatWith(GetType().Name, Key));
+                throw new InvalidOperationException ("{0} requires an InvokeOn value for key: \"{1}\"".FormatWith (GetType ().Name, Key));
 
             if (CommandType == null && InstantiationMethod == null)
-                throw new InvalidOperationException("Either CommandProperty.CommandType or CommandInstantiationMethod must be defined for key: \"{0}\"".FormatWith(Key));
+                throw new InvalidOperationException ("Either CommandProperty.CommandType or CommandInstantiationMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
             if (ExecuteMethod == null)
-                throw new InvalidOperationException("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith(Key));
+                throw new InvalidOperationException ("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
             Delegate canExecuteDelegate = null; // needs to be Func<bool> or Func<{ParameterType}, bool>
             if (CanExecuteMethod != null)
             {
-                if (CanExecuteMethod.ReturnType != typeof(bool))
-                    throw new InvalidOperationException("CommandCanExecuteMethod must have a bool return type for key: \"{0}\"".FormatWith(Key));
+                if (CanExecuteMethod.ReturnType != typeof (bool))
+                    throw new InvalidOperationException ("CommandCanExecuteMethod must have a bool return type for key: \"{0}\"".FormatWith (Key));
 
                 if (ParameterType != null)
                 {
-                    if (CanExecuteMethod.GetParameters().Count() != 1
-                        || CanExecuteMethod.GetParameters()[0].ParameterType != ParameterType)
-                        throw new InvalidOperationException("CommandProperty.ParameterType is defined but does not match parameters for CommandCanExecuteMethod for key: \"{0}\"".FormatWith(Key));
+                    if (CanExecuteMethod.GetParameters ().Count () != 1
+                        || CanExecuteMethod.GetParameters ()[0].ParameterType != ParameterType)
+                        throw new InvalidOperationException ("CommandProperty.ParameterType is defined but does not match parameters for CommandCanExecuteMethod for key: \"{0}\"".FormatWith (Key));
 
                     canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (ParameterType, typeof (bool)), InvokeOn, CanExecuteMethod);
                 }
@@ -88,7 +88,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
             else
             {
-                executeDelegate = Delegate.CreateDelegate(typeof(Action), InvokeOn, ExecuteMethod);
+                executeDelegate = Delegate.CreateDelegate (typeof (Action), InvokeOn, ExecuteMethod);
             }
 
             Object command = null;
@@ -98,7 +98,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
             else if (CommandType != null)
             {
-                command = Activator.CreateInstance(CommandType, executeDelegate, canExecuteDelegate);
+                command = Activator.CreateInstance (CommandType, executeDelegate, canExecuteDelegate);
             }
             else
             {
@@ -128,15 +128,15 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             return _ => func ();
         }
 
-        public static void WireAll(Object toWire)
+        public static void WireAll (Object toWire)
         {
-            toWire.ThrowIfNull("toWire");
+            toWire.ThrowIfNull ("toWire");
 
-            var toWireType = toWire.GetType();
+            var toWireType = toWire.GetType ();
 
-            var helperMap = new Dictionary<String, CommandWirer>();
+            var helperMap = new Dictionary<String, CommandWirer> ();
 
-            foreach (var prop in toWireType.GetProperties())
+            foreach (var prop in toWireType.GetProperties ())
             {
                 foreach (var attr in prop.GetCustomAttributes (typeof (CommandWirerAttribute), true).Cast<CommandWirerAttribute> ())
                 {
@@ -144,7 +144,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
                     CommandWirer helper;
                     if (!helperMap.TryGetValue (attr.Key, out helper))
-                        helperMap[attr.Key] = helper = new CommandWirer {Key = attr.Key, InvokeOn = toWire};
+                        helperMap[attr.Key] = helper = new CommandWirer { Key = attr.Key, InvokeOn = toWire };
 
                     var propertyAttr = attr as CommandPropertyAttribute;
                     if (propertyAttr != null)
@@ -172,7 +172,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
                     CommandWirer helper;
                     if (!helperMap.TryGetValue (attr.Key, out helper))
-                        helperMap[attr.Key] = helper = new CommandWirer {Key = attr.Key};
+                        helperMap[attr.Key] = helper = new CommandWirer { Key = attr.Key };
 
                     var createAttr = attr as CommandInstantiationMethodAttribute;
                     if (createAttr != null)
@@ -209,7 +209,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
 
             foreach (var helper in helperMap.Values)
-                helper.Wire();
+                helper.Wire ();
         }
     }
 }

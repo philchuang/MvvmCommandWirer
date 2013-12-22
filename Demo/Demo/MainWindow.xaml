@@ -36,7 +36,7 @@
         <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Margin="5,10" Command="{Binding Foo2Command}" />
         <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Margin="5,10" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
 
-        <Button Grid.Row="4" Grid.Column="0" Content="Foo3" Margin="5,10" Command="{Binding Foo3Command}" />
+        <Button Grid.Row="4" Grid.Column="0" Content="Always-enabled Foo3" Margin="5,10" Command="{Binding Foo3Command}" />
         <Button Grid.Row="4" Grid.Column="2" Content="Bar3" Margin="5,10" Command="{Binding Bar3Command}" CommandParameter="{Binding BarParameter}" />
 
         <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
