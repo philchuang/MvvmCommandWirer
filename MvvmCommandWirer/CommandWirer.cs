@@ -71,9 +71,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             {
                 if (ParameterType != null)
                 {
-                    // TODO make wrapMethodInfo(w/o MakeGenericMethod) static field and get the method name via Expression reflection
-                    var wrapMethodInfo = typeof (CommandWirer).GetMethod ("WrapFuncBool", BindingFlags.NonPublic | BindingFlags.Static).MakeGenericMethod (ParameterType);
-                    canExecuteDelegate = (Delegate) wrapMethodInfo.Invoke (this, new object[] { (Func<bool>) (() => true) });
+                    canExecuteDelegate = CreateParameterizedFuncBoolWrap (ParameterType, () => true);
                 }
                 else
                 {
@@ -122,6 +120,17 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 }
             }
         }
+
+        private static Delegate CreateParameterizedFuncBoolWrap (Type parameterType, Func<bool> func)
+        {
+            var wrapMethodInfo = WrapFuncBoolMethodInfo.MakeGenericMethod (parameterType);
+            return (Delegate) wrapMethodInfo.Invoke (null, new object[] { func });
+        }
+
+        private static readonly MethodInfo WrapFuncBoolMethodInfo =
+            typeof (CommandWirer)
+                .GetMethod (((Expression<Action>) (() => WrapFuncBool<Object> (null))).GetMethodName (),
+                            BindingFlags.NonPublic | BindingFlags.Static);
 
         private static Func<T, bool> WrapFuncBool<T> (Func<bool> func)
         {
