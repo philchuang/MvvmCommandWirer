@@ -51,20 +51,18 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             Delegate canExecuteDelegate = null; // needs to be Func<bool> or Func<{ParameterType}, bool>
             if (CanExecuteMethod != null)
             {
-                if (CanExecuteMethod.ReturnType != typeof (bool))
-                    throw new InvalidOperationException ("CommandCanExecuteMethod must have a bool return type for key: \"{0}\"".FormatWith (Key));
-
-                if (ParameterType != null)
+                if (ParameterType == null || !CanExecuteMethod.GetParameters ().Any())
                 {
-                    if (CanExecuteMethod.GetParameters ().Count () != 1
-                        || CanExecuteMethod.GetParameters ()[0].ParameterType != ParameterType)
-                        throw new InvalidOperationException ("CommandProperty.ParameterType is defined but does not match parameters for CommandCanExecuteMethod for key: \"{0}\"".FormatWith (Key));
-
-                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (ParameterType, typeof (bool)), InvokeOn, CanExecuteMethod);
+                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<bool>), InvokeOn, CanExecuteMethod);
                 }
                 else
                 {
-                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<bool>), InvokeOn, CanExecuteMethod);
+                    if (CanExecuteMethod.GetParameters ()[0].ParameterType.IsInstanceOfType (ParameterType))
+                        throw new InvalidOperationException (
+                            "CommandProperty.ParameterType is defined but does not match parameters for CommandCanExecuteMethod for key: \"{0}\"".FormatWith (
+                                Key));
+
+                    canExecuteDelegate = Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (ParameterType, typeof (bool)), InvokeOn, CanExecuteMethod);
                 }
             }
             else
@@ -158,16 +156,19 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     var propertyAttr = attr as CommandPropertyAttribute;
                     if (propertyAttr != null)
                     {
-                        helper.CommandProperty = prop;
-                        helper.CommandType = propertyAttr.CommandType;
-                        helper.ParameterType = propertyAttr.ParameterType;
+                        helper.CommandProperty = prop; // mandatory
+                        helper.CommandType = propertyAttr.CommandType; // optional if CommandInstantiationMethod is used
+                        helper.ParameterType = propertyAttr.ParameterType; // optional if not parameterized
                         continue;
                     }
 
                     var canExecuteMethodAttr = attr as CommandCanExecuteMethodAttribute;
                     if (canExecuteMethodAttr != null)
                     {
-                        helper.CanExecuteMethod = prop.GetGetMethod ();
+                        if (prop.PropertyType != typeof(bool))
+                            throw new InvalidOperationException("CommandCanExecuteMethodAttribute target \"{0}\" must have a bool return type.".FormatWith(prop.Name));
+
+                        helper.CanExecuteMethod = prop.GetGetMethod();
                         continue;
                     }
                 }
@@ -186,7 +187,30 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     var createAttr = attr as CommandInstantiationMethodAttribute;
                     if (createAttr != null)
                     {
-                        // TODO validate that method has expected parameters & return type
+                        if (helper.ParameterType == null)
+                        {
+                            if (method.GetParameters ().Count () != 2
+                                || method.GetParameters ().ElementAt (0).ParameterType != typeof (Action)
+                                || method.GetParameters ().ElementAt (1).ParameterType != typeof (Func<bool>))
+                                throw new InvalidOperationException (
+                                    "CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action commandExecute, Func<bool> commandCanExecute)."
+                                        .FormatWith (method.Name));
+                        }
+                        else
+                        {
+                            if (method.GetParameters().Count() != 2
+                                || method.GetParameters().ElementAt(0).ParameterType != typeof(Action<>).MakeGenericType(helper.ParameterType)
+                                || method.GetParameters().ElementAt(1).ParameterType != typeof(Func<,>).MakeGenericType(helper.ParameterType, typeof (bool)))
+                                throw new InvalidOperationException(
+                                    "CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action<{1}> commandExecute, Func<{1}, bool> commandCanExecute)."
+                                        .FormatWith(method.Name, helper.ParameterType.Name));
+                        }
+
+                        if (method.ReturnType == typeof(void))
+                            throw new InvalidOperationException("CommandInstantiationMethodAttribute target \"{0}\" must have a return type".FormatWith(method.Name));
+
+                        // TODO check that return type implements ICommand?
+
                         helper.InstantiationMethod = method;
                         continue;
                     }
@@ -194,15 +218,46 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     var initAttr = attr as CommandInitializationMethodAttribute;
                     if (initAttr != null)
                     {
-                        // TODO validate that if method is not parameterless, that it only has 1 parameter that implements ICommand
+                        if (helper.ParameterType == null)
+                        {
+                            if (method.GetParameters ().Count () != 0)
+                                throw new InvalidOperationException (
+                                    "CommandInitializationMethodAttribute target \"{0}\" must be parameterless.".FormatWith (method.Name));
+                        }
+                        else
+                        {
+                            if (method.GetParameters().Count() > 1)
+                                throw new InvalidOperationException(
+                                    "CommandInitializationMethodAttribute target \"{0}\" can have either no parameters or a single {1} parameter".FormatWith (method.Name, helper.ParameterType));
+                        }
+
+                        // TODO check that parameter type implements ICommand?
+
                         helper.InitializationMethod = method;
                         continue;
                     }
+
                     var canExecuteAttr = attr as CommandCanExecuteMethodAttribute;
                     if (canExecuteAttr != null)
                     {
-                        // TODO validate that method returns bool
-                        // TODO validate that method has 0 or 1 parameters
+                        if (method.ReturnType != typeof(bool))
+                            throw new InvalidOperationException("CommandCanExecuteMethodAttribute target \"{0}\" must have a bool return type.".FormatWith(method.Name));
+
+                        var paramCount = method.GetParameters ().Count ();
+                        if (paramCount == 1)
+                        {
+                            if (helper.ParameterType == null)
+                                throw new InvalidOperationException ("TODO");
+                            if (method.GetParameters().ElementAt(0).ParameterType != helper.ParameterType)
+                                throw new InvalidOperationException ("TODO");
+                        }
+                        else if (paramCount > 1)
+                        {
+                            if (method.GetParameters().Count() > 1)
+                                throw new InvalidOperationException(
+                                    "CommandCanExecuteMethodAttribute target \"{0}\" can have either no parameters or a single {1} parameter".FormatWith(method.Name, helper.ParameterType));
+                        }
+
                         helper.CanExecuteMethod = method;
                         continue;
                     }
