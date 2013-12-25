@@ -53,6 +53,7 @@
     <Reference Include="System.Reactive.Windows.Threading">
       <HintPath>..\..\packages\Rx-XAML.2.2.2\lib\net45\System.Reactive.Windows.Threading.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -70,7 +71,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Utils\DelegateCommand.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -114,6 +114,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\DemoCore\DemoCore.csproj">
+      <Project>{285a6df2-7178-4c04-976a-5130eb890db7}</Project>
+      <Name>DemoCore</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\MvvmCommandWirer\MvvmCommandWirer.csproj">
       <Project>{fe72b541-0a2b-4e3a-a360-868b10c3b306}</Project>
       <Name>MvvmCommandWirer</Name>

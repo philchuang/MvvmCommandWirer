@@ -174,7 +174,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 }
             }
 
-            foreach (var method in toWireType.GetMethods (BindingFlags.Public).Union (toWireType.GetMethods (BindingFlags.NonPublic | BindingFlags.Instance)))
+            foreach (var method in toWireType.GetMethods (BindingFlags.Public | BindingFlags.Instance).Union (toWireType.GetMethods (BindingFlags.NonPublic | BindingFlags.Instance)))
             {
                 foreach (var attr in method.GetCustomAttributes (typeof (CommandWirerAttribute), true).Cast<CommandWirerAttribute> ())
                 {
@@ -218,18 +218,19 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     var initAttr = attr as CommandInitializationMethodAttribute;
                     if (initAttr != null)
                     {
-                        if (helper.ParameterType == null)
-                        {
-                            if (method.GetParameters ().Count () != 0)
-                                throw new InvalidOperationException (
-                                    "CommandInitializationMethodAttribute target \"{0}\" must be parameterless.".FormatWith (method.Name));
-                        }
-                        else
-                        {
-                            if (method.GetParameters().Count() > 1)
-                                throw new InvalidOperationException(
-                                    "CommandInitializationMethodAttribute target \"{0}\" can have either no parameters or a single {1} parameter".FormatWith (method.Name, helper.ParameterType));
-                        }
+                        //if (helper.ParameterType == null)
+                        //{
+                        // TODO fix this
+                        //    if (method.GetParameters ().Count () != 0)
+                        //        throw new InvalidOperationException (
+                        //            "CommandInitializationMethodAttribute target \"{0}\" must be parameterless.".FormatWith (method.Name));
+                        //}
+                        //else
+                        //{
+                        //    if (method.GetParameters().Count() > 1)
+                        //        throw new InvalidOperationException(
+                        //            "CommandInitializationMethodAttribute target \"{0}\" can have either no parameters or a single {1} parameter".FormatWith (method.Name, helper.ParameterType));
+                        //}
 
                         // TODO check that parameter type implements ICommand?
 
