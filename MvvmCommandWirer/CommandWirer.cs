@@ -135,7 +135,38 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             return _ => func ();
         }
 
-        public static void WireAll (Object toWire)
+        /* TODO write these tests
+         * - expected CommandWirers are returned and configured properly
+         * - CommandInstantiationMethodAttribute cannot be on a property
+         * - CommandInitializationMethodAttribute cannot be on a property
+         * - CommandCanExecuteMethodAttribute property must return bool
+         * - decorated private instance methods are detected
+         * - decorated public instance methods are detected
+         * - OPTIONAL decorated private static methods are detected
+         * - OPTIONAL decorated public static methods are detected
+         * - CommandPropertyAttribute cannot be on a method
+         * - if parameterless Command, CommandInstantiationMethodAttribute method must have (Action, Func<bool>) parameters
+         * - if parameterized Command, CommandInstantiationMethodAttribute method must have (Action<T>, Func<T, bool>) parameters
+         * - CommandInstantiationMethodAttribute must have a return type
+         * - PONDER CommandInstantiationMethodAttribute method  return type must implement ICommand?
+         * - CommandInitializationMethodAttribute method must be parameterless OR have a single parameter
+         * - PONDER CommandInitializationMethodAttribute method parameter must match known Command type?
+         * - CommandCanExecuteMethodAttribute method must return bool
+         * - if parameterless Command, CommandCanExecuteMethodAttribute method must be parameterless
+         * - if parameterized Command, CommandCanExecuteMethodAttribute method must be parameterless OR have single parameter that matches command parameter
+         * 
+         * WHEN WIRING
+         * - CommandProperty is required
+         * - InvokeOn is required
+         * - CommandType OR InstantiationMethod is required
+         * - ExecuteMethod is required
+         * - if parameterized Command, CanExecuteMethod must be parameterless OR have single parameter that matches command parameter
+         */
+
+        // TODO determine when/where validation occurs - during attribute detection, and/or during wiring
+        // TODO move as much validation logic as possible to attributes
+
+        public static IList<CommandWirer> WireAll (Object toWire)
         {
             toWire.ThrowIfNull ("toWire");
 
@@ -275,6 +306,8 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
             foreach (var helper in helperMap.Values)
                 helper.Wire ();
+
+            return helperMap.Values.ToList ();
         }
     }
 }
