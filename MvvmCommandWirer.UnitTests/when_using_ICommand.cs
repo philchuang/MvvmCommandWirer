@@ -32,7 +32,9 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         protected abstract void AssertCanExecuteWasCalled ();
+        protected abstract Object GetCanExecuteParameter ();
         protected abstract void AssertExecuteWasCalled ();
+        protected abstract Object GetExecuteParameter ();
 
         [Test]
         public void then_Command_should_be_created ()
@@ -51,6 +53,14 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         [Test]
+        public void then_CanExecute_parameter_should_match ()
+        {
+            if (m_IsBecauseOfExceptionExpected) return;
+
+            Assert.AreSame (myCommandParameter, GetCanExecuteParameter ());
+        }
+
+        [Test]
         public void then_CanExecute_result_should_match ()
         {
             if (m_IsBecauseOfExceptionExpected) return;
@@ -65,6 +75,14 @@ namespace MvvmCommandWirer.UnitTests
             if (m_IsBecauseOfExceptionExpected) return;
 
             AssertExecuteWasCalled ();
+        }
+
+        [Test]
+        public void then_Execute_parameter_should_match ()
+        {
+            if (m_IsBecauseOfExceptionExpected) return;
+
+            Assert.AreSame (myCommandParameter, GetExecuteParameter ());
         }
     }
 }

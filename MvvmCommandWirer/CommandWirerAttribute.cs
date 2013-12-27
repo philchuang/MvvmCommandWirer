@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -25,6 +27,9 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         /// <param name="methodName"></param>
         /// <returns></returns>
         public abstract void SetKeyFromMethodName(String methodName);
+
+        public abstract void Configure (CommandWirer wirer, System.Reflection.PropertyInfo prop);
+        public abstract void Configure (CommandWirer wirer, System.Reflection.MethodInfo method);
     }
 
     public class CommandPropertyAttribute : CommandWirerAttribute
@@ -51,6 +56,18 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
             Key = k;
         }
+
+        public override void Configure (CommandWirer wirer, PropertyInfo prop)
+        {
+            wirer.CommandProperty = prop; // mandatory
+            wirer.CommandType = CommandType; // optional if CommandInstantiationMethod is used
+            wirer.ParameterType = ParameterType; // optional if not parameterized
+        }
+
+        public override void Configure (CommandWirer wirer, MethodInfo method)
+        {
+            throw new InvalidOperationException ("CommandPropertyAttribute must be applied to a property, not method \"{0}\".".FormatWith (method.Name));
+        }
     }
 
     public class CommandInstantiationMethodAttribute : CommandWirerAttribute
@@ -73,6 +90,40 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 Key = initSuffixMatch.Groups[1].Value;
             else
                 throw new ArgumentException ("Expecting method name like \"Instantiate[Key]Command\"");
+        }
+
+        public override void Configure (CommandWirer wirer, PropertyInfo prop)
+        {
+            throw new InvalidOperationException ("CommandInstantiationMethodAttribute must be applied to a method, not property \"{0}\".".FormatWith (prop.Name));
+        }
+
+        public override void Configure (CommandWirer wirer, MethodInfo method)
+        {
+            if (wirer.ParameterType == null)
+            {
+                if (method.GetParameters ().Count () != 2
+                    || method.GetParameters ().ElementAt (0).ParameterType != typeof (Action)
+                    || method.GetParameters ().ElementAt (1).ParameterType != typeof (Func<bool>))
+                    throw new InvalidOperationException (
+                        "CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action commandExecute, Func<bool> commandCanExecute)."
+                            .FormatWith (method.Name));
+            }
+            else
+            {
+                if (method.GetParameters ().Count () != 2
+                    || method.GetParameters ().ElementAt (0).ParameterType != typeof (Action<>).MakeGenericType (wirer.ParameterType)
+                    || method.GetParameters ().ElementAt (1).ParameterType != typeof (Func<,>).MakeGenericType (wirer.ParameterType, typeof (bool)))
+                    throw new InvalidOperationException (
+                        "CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action<{1}> commandExecute, Func<{1}, bool> commandCanExecute)."
+                            .FormatWith (method.Name, wirer.ParameterType.Name));
+            }
+
+            if (method.ReturnType == typeof (void))
+                throw new InvalidOperationException ("CommandInstantiationMethodAttribute target \"{0}\" must have a return type".FormatWith (method.Name));
+
+            // TODO check that return type implements ICommand?
+
+            wirer.InstantiationMethod = method;
         }
     }
 
@@ -97,6 +148,24 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             else
                 throw new ArgumentException("Expecting method name like \"Initialize[Key]Command\"");
         }
+
+        public override void Configure (CommandWirer wirer, PropertyInfo prop)
+        {
+            throw new InvalidOperationException ("CommandInitializationMethodAttribute must be applied to a method, not property \"{0}\".".FormatWith (prop.Name));
+        }
+
+        public override void Configure (CommandWirer wirer, MethodInfo method)
+        {
+            if (method.GetParameters ().Count () > 1)
+            {
+                throw new InvalidOperationException ("CommandInitializationMethodAttribute target \"{0}\" can have either no parameters or a single parameter for the ICommand instance."
+                                                         .FormatWith (method.Name));
+            }
+
+            // TODO check that parameter type implements ICommand?
+
+            wirer.InitializationMethod = method;
+        }
     }
 
     public class CommandCanExecuteMethodAttribute : CommandWirerAttribute
@@ -116,6 +185,74 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             else
                 throw new ArgumentException("Expecting method name like \"Can[Key]\"");
         }
+
+        public override void Configure (CommandWirer wirer, PropertyInfo prop)
+        {
+            if (prop.PropertyType != typeof (bool))
+                throw new InvalidOperationException ("CommandCanExecuteMethodAttribute target \"{0}\" must have a bool return type.".FormatWith (prop.Name));
+
+            wirer.CanExecuteMethod = prop.GetGetMethod (false) ?? prop.GetGetMethod (true);
+        }
+
+        public override void Configure (CommandWirer wirer, MethodInfo method)
+        {
+            if (method.ReturnType != typeof (bool))
+                throw new InvalidOperationException ("CommandCanExecuteMethodAttribute target \"{0}\" must have a bool return type.".FormatWith (method.Name));
+
+            var paramCount = method.GetParameters ().Count ();
+            if (paramCount == 1)
+            {
+                if (wirer.ParameterType == null)
+                    throw new InvalidOperationException ("CommandCanExecuteMethodAttribute target \"{0}\" must be parameterless because CommandProperty.ParameterType was not defined.".FormatWith (method.Name));
+                // TODO consider allowing matching types
+                if (method.GetParameters ().ElementAt (0).ParameterType != wirer.ParameterType)
+                    throw new InvalidOperationException ("CommandCanExecuteMethodAttribute target \"{0}\" parameter type \"{1}\" does not match CommandProperty.ParameterType \"{2}\"."
+                                                             .FormatWith (method.Name,
+                                                                          typeof (int?).Name,
+                                                                          typeof (String).Name));
+            }
+            else if (paramCount > 1)
+            {
+                if (method.GetParameters ().Count () > 1)
+                    throw new InvalidOperationException (
+                        "CommandCanExecuteMethodAttribute target \"{0}\" can have either no parameters or a single {1} parameter".FormatWith (method.Name, wirer.ParameterType));
+            }
+
+            wirer.CanExecuteMethod = method;
+        }
+
+        public static Delegate CreateCanExecuteDelegate (MethodInfo canExecuteMethod, Type commandParameterType, Object invokeOn)
+        {
+            if (canExecuteMethod != null)
+            {
+                if (commandParameterType == null || !canExecuteMethod.GetParameters ().Any ())
+                    return Delegate.CreateDelegate (typeof (Func<bool>), invokeOn, canExecuteMethod);
+
+                return Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (commandParameterType, typeof (bool)), invokeOn, canExecuteMethod);
+            }
+            if (commandParameterType != null)
+            {
+                return CreateParameterizedFuncBoolWrap (commandParameterType, () => true);
+            }
+
+            return (Func<bool>) (() => true);
+        }
+
+        private static Delegate CreateParameterizedFuncBoolWrap (Type parameterType, Func<bool> func)
+        {
+            var wrapMethodInfo = WrapFuncBoolMethodInfo.MakeGenericMethod (parameterType);
+            return (Delegate) wrapMethodInfo.Invoke (null, new object[] { func });
+        }
+
+        private static readonly MethodInfo WrapFuncBoolMethodInfo =
+            typeof (CommandWirer)
+                .GetMethod (((Expression<Action>) (() => WrapFuncBool<Object> (null))).GetMethodName (),
+                            BindingFlags.NonPublic | BindingFlags.Static);
+
+        private static Func<T, bool> WrapFuncBool<T> (Func<bool> func)
+        {
+            return _ => func ();
+        }
     }
 
     public class CommandExecuteMethodAttribute : CommandWirerAttribute
@@ -134,6 +271,25 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 Key = match.Groups[1].Value;
             else
                 Key = methodName;
+        }
+
+        public override void Configure (CommandWirer wirer, PropertyInfo prop)
+        {
+            throw new NotImplementedException ();
+        }
+
+        public override void Configure (CommandWirer wirer, MethodInfo method)
+        {
+            // TODO validate that method has 0 or 1 parameters
+            wirer.ExecuteMethod = method;
+        }
+
+        public static Delegate CreateExecuteDelegate (MethodInfo executeMethod, Type commandParameterType, Object invokeOn)
+        {
+            if (commandParameterType != null)
+                return Delegate.CreateDelegate (typeof (Action<>).MakeGenericType (commandParameterType), invokeOn, executeMethod);
+            
+            return Delegate.CreateDelegate (typeof (Action), invokeOn, executeMethod);
         }
     }
 }

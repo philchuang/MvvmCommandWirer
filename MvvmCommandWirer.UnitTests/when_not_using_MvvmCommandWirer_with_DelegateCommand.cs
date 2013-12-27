@@ -33,7 +33,9 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         protected override void AssertCanExecuteWasCalled () { Assert.IsTrue (m_CanExecuteCalled); }
+        protected override object GetCanExecuteParameter () { return null; }
         protected override void AssertExecuteWasCalled () { Assert.IsTrue (m_ExecuteCalled); }
+        protected override object GetExecuteParameter () { return null; }
     }
 
     public class when_not_using_MvvmCommandWirer_with_DelegateCommand_String : when_using_ICommand<DelegateCommand<String>>
@@ -75,10 +77,14 @@ namespace MvvmCommandWirer.UnitTests
             Assert.AreSame (myCommandParameter, m_CanExecuteParameter);
         }
 
+        protected override object GetCanExecuteParameter () { return m_CanExecuteParameter; }
+
         protected override void AssertExecuteWasCalled ()
         {
             Assert.IsTrue (m_ExecuteCalled);
             Assert.AreSame (myCommandParameter, m_ExecuteParameter);
         }
+
+        protected override object GetExecuteParameter () { return m_ExecuteParameter; }
     }
 }
