@@ -136,9 +136,6 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         }
 
         /* TODO write these tests
-         * - expected CommandWirers are returned and configured properly
-         * - CommandInstantiationMethodAttribute cannot be on a property
-         * - CommandInitializationMethodAttribute cannot be on a property
          * - CommandCanExecuteMethodAttribute property must return bool
          * - decorated private instance methods are detected
          * - decorated public instance methods are detected
@@ -174,7 +171,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
             var helperMap = new Dictionary<String, CommandWirer> ();
 
-            foreach (var prop in toWireType.GetProperties ())
+            foreach (var prop in toWireType.GetProperties (BindingFlags.Public | BindingFlags.Instance).Union (toWireType.GetProperties (BindingFlags.NonPublic | BindingFlags.Instance)))
             {
                 foreach (var attr in prop.GetCustomAttributes (typeof (CommandWirerAttribute), true).Cast<CommandWirerAttribute> ())
                 {
@@ -199,7 +196,21 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                         if (prop.PropertyType != typeof(bool))
                             throw new InvalidOperationException("CommandCanExecuteMethodAttribute target \"{0}\" must have a bool return type.".FormatWith(prop.Name));
 
-                        helper.CanExecuteMethod = prop.GetGetMethod();
+                        helper.CanExecuteMethod = prop.GetGetMethod (false) ?? prop.GetGetMethod (true);
+                        continue;
+                    }
+
+                    var instantiationMethodAttr = attr as CommandInstantiationMethodAttribute;
+                    if (instantiationMethodAttr != null)
+                    {
+                        throw new InvalidOperationException ("CommandInstantiationMethodAttribute must be applied to a method, not property \"{0}\".".FormatWith (prop.Name));
+                        continue;
+                    }
+
+                    var initializationMethodAttr = attr as CommandInitializationMethodAttribute;
+                    if (initializationMethodAttr != null)
+                    {
+                        throw new InvalidOperationException ("CommandInitializationMethodAttribute must be applied to a method, not property \"{0}\".".FormatWith (prop.Name));
                         continue;
                     }
                 }

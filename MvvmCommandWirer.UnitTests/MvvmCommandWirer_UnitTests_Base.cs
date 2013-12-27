@@ -24,7 +24,11 @@ namespace MvvmCommandWirer.UnitTests
             Assert.IsNotNull (m_BecauseOfException, "Expected m_BecauseOfException to not be null");
             Assert.IsNotNull (m_ExpectedBecauseOfException, "m_ExpectedBecauseOfException was not provided");
             Assert.AreEqual (m_ExpectedBecauseOfException.GetType (), m_BecauseOfException.GetType (),
-                             "Expected m_BecauseOfException to be {0}, got {1}", m_ExpectedBecauseOfException.GetType ().Name, m_BecauseOfException.GetType ().Name);
+                             "Expected m_BecauseOfException to be {0} \"{1}\", got {2} \"{3}\"",
+                             m_ExpectedBecauseOfException.GetType ().Name,
+                             m_ExpectedBecauseOfException.Message,
+                             m_BecauseOfException.GetType ().Name,
+                             m_BecauseOfException.Message);
             Assert.AreEqual (m_ExpectedBecauseOfException.Message, m_BecauseOfException.Message,
                              "Expected m_BecauseOfException to be {0}, got {1}", m_ExpectedBecauseOfException.Message, m_BecauseOfException.Message);
         }

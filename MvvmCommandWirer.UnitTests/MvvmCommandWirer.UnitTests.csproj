@@ -54,8 +54,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\MvvmCommandWirer\Extensions.cs">
+      <Link>Extensions.cs</Link>
+    </Compile>
     <Compile Include="MvvmCommandWirer_UnitTests_Base.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestExtensions.cs" />
     <Compile Include="when_not_using_MvvmCommandWirer_with_DelegateCommand.cs" />
     <Compile Include="when_using_MvvmCommandWirer.cs" />
     <Compile Include="when_using_ICommand.cs" />

@@ -27,9 +27,9 @@ namespace MvvmCommandWirer.UnitTests
                         };
         }
 
-        protected override void InitializeCommand ()
+        protected override DelegateCommand CreateCommand ()
         {
-            myCommand = new DelegateCommand (m_Execute, m_CanExecute);
+            return new DelegateCommand (m_Execute, m_CanExecute);
         }
 
         protected override void AssertCanExecuteWasCalled () { Assert.IsTrue (m_CanExecuteCalled); }
@@ -64,9 +64,9 @@ namespace MvvmCommandWirer.UnitTests
                         };
         }
 
-        protected override void InitializeCommand ()
+        protected override DelegateCommand<String> CreateCommand ()
         {
-            myCommand = new DelegateCommand<String> (m_Execute, m_CanExecute);
+            return new DelegateCommand<String> (m_Execute, m_CanExecute);
         }
 
         protected override void AssertCanExecuteWasCalled ()

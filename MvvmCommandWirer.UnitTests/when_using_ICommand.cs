@@ -14,13 +14,13 @@ namespace MvvmCommandWirer.UnitTests
         protected bool myCanExecuteExpected;
         protected bool? myCanExecuteResult;
 
-        protected abstract void InitializeCommand ();
+        protected abstract TCommand CreateCommand ();
 
         protected override void Because_of ()
         {
             try
             {
-                InitializeCommand ();
+                myCommand = CreateCommand ();
 
                 myCanExecuteResult = myCommand.CanExecute (myCommandParameter);
                 myCommand.Execute (myCommandParameter);
@@ -33,6 +33,14 @@ namespace MvvmCommandWirer.UnitTests
 
         protected abstract void AssertCanExecuteWasCalled ();
         protected abstract void AssertExecuteWasCalled ();
+
+        [Test]
+        public void then_Command_should_be_created ()
+        {
+            if (m_IsBecauseOfExceptionExpected) return;
+
+            Assert.IsNotNull (myCommand);
+        }
 
         [Test]
         public void then_CanExecute_should_be_called ()

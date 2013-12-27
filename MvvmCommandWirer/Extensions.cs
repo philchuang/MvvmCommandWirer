@@ -43,5 +43,26 @@ namespace Com.PhilChuang.Utils
 
             throw new Exception (String.Format ("Expected MethodCallExpression, got {0}", self.Body.NodeType));
         }
+
+        public static String GetPropertyName<T> (this Expression<Func<T>> self)
+        {
+            if (self == null) throw new ArgumentNullException ("self");
+
+            if (self.Body.NodeType == ExpressionType.MemberAccess)
+            {
+                var memberExpr = (MemberExpression) self.Body;
+                return memberExpr.Member.Name;
+            }
+
+            if (self.Body.NodeType == ExpressionType.Convert
+                && self.Body is UnaryExpression
+                && ((UnaryExpression) self.Body).Operand.NodeType == ExpressionType.MemberAccess)
+            {
+                var memberExpr = (MemberExpression) ((UnaryExpression) self.Body).Operand;
+                return memberExpr.Member.Name;
+            }
+
+            throw new Exception (String.Format ("Expected MemberAccess expression, got {0}", self.Body.NodeType));
+        }
     }
 }
