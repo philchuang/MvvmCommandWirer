@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
+using Com.PhilChuang.Utils;
 using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming
@@ -23,12 +25,19 @@ namespace MvvmCommandWirer.UnitTests
                 myCommand = CreateCommand ();
 
                 myCanExecuteResult = myCommand.CanExecute (myCommandParameter);
-                myCommand.Execute (myCommandParameter);
+                // invoke off the main thread just in case it's async
+                Task.Run (() => myCommand.Execute (myCommandParameter)).Wait ();
+                WaitUntilExecuteIsFinished ();
             }
             catch (Exception ex)
             {
                 m_BecauseOfException = ex;
             }
+        }
+
+        protected virtual void WaitUntilExecuteIsFinished ()
+        {
+            // base impl does nothing
         }
 
         protected abstract void AssertCanExecuteWasCalled ();

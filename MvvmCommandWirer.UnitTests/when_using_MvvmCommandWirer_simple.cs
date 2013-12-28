@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
@@ -50,6 +51,48 @@ namespace MvvmCommandWirer.UnitTests
         }
     }
 
+    public class when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_simple_async :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_simple_async.ViewModel>
+    {
+        public class ViewModel : WireTargetBase
+        {
+            public ManualResetEvent FooAsyncMre = new ManualResetEvent (false);
+
+            [CommandProperty (commandType: typeof (DelegateCommand))]
+            public ICommand FooCommand { get; set; }
+
+            [CommandCanExecuteMethod]
+            public bool CanFoo ()
+            {
+                CanExecuteCalled = true;
+                return CanExecuteReturnValue;
+            }
+
+            [CommandExecuteMethod]
+            public async void FooAsync ()
+            {
+                await Task.Delay (1);
+                ExecuteCalled = true;
+                FooAsyncMre.Set ();
+            }
+        }
+
+        protected override void WaitUntilExecuteIsFinished () { myWireTarget.FooAsyncMre.WaitOne (); }
+
+        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand) myWireTarget.FooCommand; }
+
+        protected override void AssertWireAllResultsMatch ()
+        {
+            Assert.IsNotNull (myWireAllResults);
+            Assert.AreEqual (1, myWireAllResults.Count);
+
+            var wirer = myWireAllResults[0];
+            Assert.AreEqual (Extensions.GetPropertyInfo (() => myWireTarget.FooCommand), wirer.CommandProperty);
+            Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.CanFoo ()), wirer.CanExecuteMethod);
+            Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.FooAsync ()), wirer.ExecuteMethod);
+        }
+    }
+
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple : 
         when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple.ViewModel>
     {
@@ -85,6 +128,50 @@ namespace MvvmCommandWirer.UnitTests
             Assert.AreEqual (typeof (ViewModel).GetProperty (Extensions.GetPropertyName (() => myWireTarget.FooCommand)), wirer.CommandProperty);
             Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.CanFoo (null)), wirer.CanExecuteMethod);
             Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.Foo (null)), wirer.ExecuteMethod);
+        }
+    }
+
+    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_async :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_async.ViewModel>
+    {
+        public class ViewModel : WireTargetBase
+        {
+            public ManualResetEvent FooAsyncMre = new ManualResetEvent (false);
+
+            [CommandProperty (commandType: typeof (DelegateCommand<String>), paramType: typeof (String))]
+            public ICommand FooCommand { get; set; }
+
+            [CommandCanExecuteMethod]
+            public bool CanFoo (String parameter)
+            {
+                CanExecuteCalled = true;
+                CanExecuteParameter = parameter;
+                return CanExecuteReturnValue;
+            }
+
+            [CommandExecuteMethod]
+            public async void FooAsync (String parameter)
+            {
+                await Task.Delay (1);
+                ExecuteCalled = true;
+                ExecuteParameter = parameter;
+                FooAsyncMre.Set ();
+            }
+        }
+
+        protected override void WaitUntilExecuteIsFinished () { myWireTarget.FooAsyncMre.WaitOne (); }
+
+        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+
+        protected override void AssertWireAllResultsMatch ()
+        {
+            Assert.IsNotNull (myWireAllResults);
+            Assert.AreEqual (1, myWireAllResults.Count);
+
+            var wirer = myWireAllResults[0];
+            Assert.AreEqual (Extensions.GetPropertyInfo (() => myWireTarget.FooCommand), wirer.CommandProperty);
+            Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.CanFoo (null)), wirer.CanExecuteMethod);
+            Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.FooAsync (null)), wirer.ExecuteMethod);
         }
     }
 

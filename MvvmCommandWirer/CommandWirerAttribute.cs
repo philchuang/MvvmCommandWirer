@@ -274,10 +274,16 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             methodName.ThrowIfNullOrBlank("methodName");
 
             var match = Regex.Match(methodName, @"^(?:Execute|Do)([A-Z].*)$");
+            String k;
             if (match.Success && match.Groups.Count == 2)
-                Key = match.Groups[1].Value;
+                k = match.Groups[1].Value;
             else
-                Key = methodName;
+                k = methodName;
+
+            if (k.EndsWith ("Async", StringComparison.OrdinalIgnoreCase))
+                k = k.Substring (0, k.Length - 5);
+
+            Key = k;
         }
 
         public override void Configure (CommandWirer wirer, PropertyInfo prop)
