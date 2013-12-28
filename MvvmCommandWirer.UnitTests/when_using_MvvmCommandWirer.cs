@@ -78,14 +78,14 @@ namespace MvvmCommandWirer.UnitTests
 
     public abstract class WireTargetBase
     {
-        public bool CanExecuteReturnValue { get; set; }
+        public virtual bool CanExecuteReturnValue { get; set; }
 
-        public bool CanExecuteCalled { get; set; }
+        public virtual bool CanExecuteCalled { get; set; }
 
-        public Object CanExecuteParameter { get; set; }
+        public virtual Object CanExecuteParameter { get; set; }
 
-        public bool ExecuteCalled { get; set; }
+        public virtual bool ExecuteCalled { get; set; }
      
-        public Object ExecuteParameter { get; set; }
+        public virtual Object ExecuteParameter { get; set; }
     }
 }

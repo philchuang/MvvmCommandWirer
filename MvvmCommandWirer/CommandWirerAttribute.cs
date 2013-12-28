@@ -225,11 +225,21 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         {
             if (canExecuteMethod != null)
             {
-                if (commandParameterType == null || !canExecuteMethod.GetParameters ().Any ())
+                if (canExecuteMethod.IsStatic)
+                    invokeOn = null;
+
+                if (commandParameterType == null)
                     return Delegate.CreateDelegate (typeof (Func<bool>), invokeOn, canExecuteMethod);
+
+                if (!canExecuteMethod.GetParameters ().Any ())
+                {
+                    var del = Delegate.CreateDelegate (typeof (Func<bool>), invokeOn, canExecuteMethod);
+                    return CreateParameterizedFuncBoolWrap (commandParameterType, (Func<bool>) del);
+                }
 
                 return Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (commandParameterType, typeof (bool)), invokeOn, canExecuteMethod);
             }
+
             if (commandParameterType != null)
             {
                 return CreateParameterizedFuncBoolWrap (commandParameterType, () => true);
@@ -244,10 +254,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             return (Delegate) wrapMethodInfo.Invoke (null, new object[] { func });
         }
 
-        private static readonly MethodInfo WrapFuncBoolMethodInfo =
-            typeof (CommandWirer)
-                .GetMethod (((Expression<Action>) (() => WrapFuncBool<Object> (null))).GetMethodName (),
-                            BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly MethodInfo WrapFuncBoolMethodInfo = Extensions.GetMethodInfo (() => WrapFuncBool<Object> (null)).GetGenericMethodDefinition ();
 
         private static Func<T, bool> WrapFuncBool<T> (Func<bool> func)
         {
@@ -286,9 +293,12 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         public static Delegate CreateExecuteDelegate (MethodInfo executeMethod, Type commandParameterType, Object invokeOn)
         {
+            if (executeMethod.IsStatic)
+                invokeOn = null;
+
             if (commandParameterType != null)
                 return Delegate.CreateDelegate (typeof (Action<>).MakeGenericType (commandParameterType), invokeOn, executeMethod);
-            
+
             return Delegate.CreateDelegate (typeof (Action), invokeOn, executeMethod);
         }
     }

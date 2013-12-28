@@ -45,7 +45,7 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         [Test]
-        public void then_CanExecute_should_be_called ()
+        public virtual void then_CanExecute_should_be_called ()
         {
             if (m_IsBecauseOfExceptionExpected) return;
 
@@ -53,7 +53,7 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         [Test]
-        public void then_CanExecute_parameter_should_match ()
+        public virtual void then_CanExecute_parameter_should_match ()
         {
             if (m_IsBecauseOfExceptionExpected) return;
 
@@ -61,7 +61,7 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         [Test]
-        public void then_CanExecute_result_should_match ()
+        public virtual void then_CanExecute_result_should_match ()
         {
             if (m_IsBecauseOfExceptionExpected) return;
 
