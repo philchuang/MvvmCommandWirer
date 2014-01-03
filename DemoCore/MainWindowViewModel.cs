@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Expressions;
 using System.Windows.Input;
+using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
 using Demo.Utils;
 
@@ -18,7 +15,12 @@ namespace Demo
         public event PropertyChangedEventHandler PropertyChanged = delegate { };
         protected event PropertyChangedEventHandler PropertyChangedInternal = delegate { };
 
-        protected void RaisePropertyChanged ([CallerMemberName] String propertyName = null)
+        protected void RaisePropertyChanged<T> (Expression<Func<T>> propGet)
+        {
+            RaisePropertyChanged (propGet.GetPropertyName ());
+        }
+
+        protected void RaisePropertyChanged (String propertyName)
         {
             PropertyChanged (this, new PropertyChangedEventArgs (propertyName));
             PropertyChangedInternal (this, new PropertyChangedEventArgs (propertyName));
@@ -35,7 +37,7 @@ namespace Demo
             set
             {
                 myCanFoo = value;
-                RaisePropertyChanged ();
+                RaisePropertyChanged (() => CanFoo);
             }
         }
 
@@ -47,7 +49,7 @@ namespace Demo
         public ICommand BarCommand { get; private set; }
 
         private bool CanBar (String barParameter)
-        { return !String.IsNullOrWhiteSpace (barParameter); }
+        { return !barParameter.IsNullOrBlank (); }
 
         private void Bar (String barParameter)
         { if (CanBar (barParameter)) Output = "Bar! + " + barParameter; }
@@ -165,7 +167,7 @@ namespace Demo
             set
             {
                 myBarParameter = value;
-                RaisePropertyChanged ();
+                RaisePropertyChanged (() => BarParameter);
             }
         }
 
@@ -176,7 +178,7 @@ namespace Demo
             set
             {
                 myOutput = String.Format ("{0:o} {1}", DateTime.Now, value);
-                RaisePropertyChanged ();
+                RaisePropertyChanged (() => Output);
             }
         }
     }

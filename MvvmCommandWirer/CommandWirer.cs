@@ -9,6 +9,9 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
     // http://xamlblog.tumblr.com/post/46187145555/fixing-mvvm-part-1-commands
     // http://stackoverflow.com/questions/658316/runtime-creation-of-generic-funct
 
+    /// <summary>
+    /// Uses CommandWirerAttributes to determine how to wire up an ICommand
+    /// </summary>
     public class CommandWirer
     {
         public String Key { get; set; }
@@ -29,8 +32,17 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         public MethodInfo ExecuteMethod { get; set; }
 
-        // TODO TEST with async
+        /* TODO TEST
+         * WHEN WIRING
+         * - CommandProperty is required
+         * - InvokeOn is required
+         * - CommandType OR InstantiationMethod is required
+         * - ExecuteMethod is required
+         */
 
+        /// <summary>
+        /// Wires up a single Command
+        /// </summary>
         public void Wire ()
         {
             if (CommandProperty == null)
@@ -45,10 +57,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             if (ExecuteMethod == null)
                 throw new InvalidOperationException ("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
-            // CONSIDER moving these functions back into this class
+            // create delegates for the Command
             var canExecuteDelegate = CommandCanExecuteMethodAttribute.CreateCanExecuteDelegate (CanExecuteMethod, ParameterType, InvokeOn);
             var executeDelegate = CommandExecuteMethodAttribute.CreateExecuteDelegate (ExecuteMethod, ParameterType, InvokeOn);
 
+            // create the Command and set it on the Property
             Object command = null;
             if (InstantiationMethod != null)
             {
@@ -60,17 +73,16 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
             else
             {
+                // this line shouldn't ever be hit
                 throw new InvalidOperationException (String.Format ("Did not have an Command instantiation method for key: \"{0}\"", Key));
             }
             CommandProperty.SetValue (InvokeOn, command, null);
 
+            // initialize the command
             if (InitializationMethod != null)
             {
                 if (InitializationMethod.GetParameters ().Count () == 1)
                 {
-                    //var paramType = InitializationMethod.GetParameters ().First ().ParameterType;
-                    //if (!paramType.IsInstanceOfType (command))
-                    //    throw new InvalidOperationException (String.Format ("Unable to pass {0} as {1} parameter to {2}", command.GetType ().Name, paramType.Name, InitializationMethod.Name));
                     InitializationMethod.Invoke (InvokeOn, new[] { command });
                 }
                 else
@@ -80,17 +92,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
         }
 
-        /* - CONSIDER CommandInstantiationMethodAttribute method return type must implement ICommand?
-         * - CONSIDER CommandInitializationMethodAttribute method parameter must match known Command type?
-         * 
-         * TODO TEST
-         * WHEN WIRING
-         * - CommandProperty is required
-         * - InvokeOn is required
-         * - CommandType OR InstantiationMethod is required
-         * - ExecuteMethod is required
-         */
-
+        /// <summary>
+        /// Wires up an entire object according to its usage of CommandWirerAttributes
+        /// </summary>
+        /// <param name="toWire"></param>
+        /// <returns></returns>
         public static IList<CommandWirer> WireAll (Object toWire)
         {
             toWire.ThrowIfNull ("toWire");

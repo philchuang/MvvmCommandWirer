@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Com.PhilChuang.Utils.MvvmCommandWirer
@@ -28,8 +26,8 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         /// <returns></returns>
         public abstract void SetKeyFromMethodName(String methodName);
 
-        public abstract void Configure (CommandWirer wirer, System.Reflection.PropertyInfo prop);
-        public abstract void Configure (CommandWirer wirer, System.Reflection.MethodInfo method);
+        public abstract void Configure (CommandWirer wirer, PropertyInfo prop);
+        public abstract void Configure (CommandWirer wirer, MethodInfo method);
     }
 
     public class CommandPropertyAttribute : CommandWirerAttribute
@@ -121,7 +119,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             if (method.ReturnType == typeof (void))
                 throw new InvalidOperationException ("CommandInstantiationMethodAttribute target \"{0}\" must have a return type".FormatWith (method.Name));
 
-            // TODO check that return type implements ICommand?
+            // TODO CONSIDER check that return type implements ICommand?
 
             wirer.InstantiationMethod = method;
         }
@@ -162,7 +160,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                                                          .FormatWith (method.Name));
             }
 
-            // TODO check that parameter type implements ICommand?
+            // TODO CONSIDER check that parameter type implements ICommand?
 
             wirer.InitializationMethod = method;
         }
@@ -204,7 +202,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             {
                 if (wirer.ParameterType == null)
                     throw new InvalidOperationException ("CommandCanExecuteMethodAttribute target \"{0}\" must be parameterless because CommandProperty.ParameterType was not defined.".FormatWith (method.Name));
-                // TODO consider allowing matching types
+                // TODO CONSIDER allowing matching types (i.e. int -> double or impl -> interface)
                 if (method.GetParameters ().ElementAt (0).ParameterType != wirer.ParameterType)
                     throw new InvalidOperationException ("CommandCanExecuteMethodAttribute target \"{0}\" parameter type \"{1}\" does not match CommandProperty.ParameterType \"{2}\"."
                                                              .FormatWith (method.Name,
@@ -260,6 +258,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         {
             return _ => func ();
         }
+
     }
 
     public class CommandExecuteMethodAttribute : CommandWirerAttribute
@@ -288,12 +287,32 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         public override void Configure (CommandWirer wirer, PropertyInfo prop)
         {
-            throw new NotImplementedException ();
+            throw new InvalidOperationException ("CommandExecuteMethodAttribute target \"{0}\" must be a method.".FormatWith (prop.Name));
         }
 
         public override void Configure (CommandWirer wirer, MethodInfo method)
         {
-            // TODO validate that method has 0 or 1 parameters
+            // NOTE very similar to CommandCanExecuteMethodAttribute.Configure
+
+            var paramCount = method.GetParameters ().Count ();
+            if (paramCount == 1)
+            {
+                if (wirer.ParameterType == null)
+                    throw new InvalidOperationException ("CommandExecuteMethodAttribute target \"{0}\" must be parameterless because CommandProperty.ParameterType was not defined.".FormatWith (method.Name));
+                // TODO CONSIDER allowing matching types (i.e. int -> double or impl -> interface)
+                if (method.GetParameters ().ElementAt (0).ParameterType != wirer.ParameterType)
+                    throw new InvalidOperationException ("CommandExecuteMethodAttribute target \"{0}\" parameter type \"{1}\" does not match CommandProperty.ParameterType \"{2}\"."
+                                                             .FormatWith (method.Name,
+                                                                          typeof (int?).Name,
+                                                                          typeof (String).Name));
+            }
+            else if (paramCount > 1)
+            {
+                if (method.GetParameters ().Count () > 1)
+                    throw new InvalidOperationException (
+                        "CommandExecuteMethodAttribute target \"{0}\" can have either no parameters or a single {1} parameter".FormatWith (method.Name, wirer.ParameterType));
+            }
+
             wirer.ExecuteMethod = method;
         }
 
