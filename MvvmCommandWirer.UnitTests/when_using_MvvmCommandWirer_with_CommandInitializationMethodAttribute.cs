@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
-using Demo.Utils;
+using Microsoft.Practices.Prism.Commands;
 using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming

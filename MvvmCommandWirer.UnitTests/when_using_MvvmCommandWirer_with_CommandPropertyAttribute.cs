@@ -2,7 +2,7 @@
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
-using Demo.Utils;
+using Microsoft.Practices.Prism.Commands;
 
 // ReSharper disable InconsistentNaming
 namespace MvvmCommandWirer.UnitTests

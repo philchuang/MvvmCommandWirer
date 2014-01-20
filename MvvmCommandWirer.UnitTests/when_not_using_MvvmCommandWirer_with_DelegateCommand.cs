@@ -1,5 +1,5 @@
 ﻿using System;
-using Demo.Utils;
+using Microsoft.Practices.Prism.Commands;
 using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming

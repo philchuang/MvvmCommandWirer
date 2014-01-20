@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
-using Demo.Utils;
+using Microsoft.Practices.Prism.Commands;
 
 namespace Demo
 {
@@ -62,13 +62,13 @@ namespace Demo
             FooCommand = new DelegateCommand (Foo, () => CanFoo);
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "CanFoo")
-                                               ((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
+                                               ((DelegateCommand) FooCommand).RaiseCanExecuteChanged ();
                                        };
 
             BarCommand = new DelegateCommand<String> (Bar, CanBar);
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "BarParameter")
-                                               ((DelegateCommand) BarCommand).InvalidateCanExecuteChanged ();
+                                               ((DelegateCommand) BarCommand).RaiseCanExecuteChanged ();
                                        };
 
             // ------------ NEW WAY TO INITIALIZE ----------------------------------------------------------------------
@@ -87,7 +87,7 @@ namespace Demo
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "CanFoo")
-                                               ((DelegateCommand) command).InvalidateCanExecuteChanged ();
+                                               ((DelegateCommand) command).RaiseCanExecuteChanged ();
                                        };
         }
 
@@ -120,7 +120,7 @@ namespace Demo
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "BarParameter")
-                                               command.InvalidateCanExecuteChanged ();
+                                               command.RaiseCanExecuteChanged ();
                                        };
         }
 
@@ -146,7 +146,7 @@ namespace Demo
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "BarParameter")
-                                               ((DelegateCommand) Bar3Command).InvalidateCanExecuteChanged ();
+                                               ((DelegateCommand) Bar3Command).RaiseCanExecuteChanged ();
                                        };
         }
 

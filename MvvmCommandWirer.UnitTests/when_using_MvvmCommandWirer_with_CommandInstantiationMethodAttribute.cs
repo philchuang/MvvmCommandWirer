@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
-using Demo.Utils;
+using Microsoft.Practices.Prism.Commands;
 using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming
@@ -51,7 +51,7 @@ namespace MvvmCommandWirer.UnitTests
     }
 
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute :
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute.ViewModel>
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -86,7 +86,7 @@ namespace MvvmCommandWirer.UnitTests
             myCommandParameter = Guid.NewGuid ().ToString ();
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {

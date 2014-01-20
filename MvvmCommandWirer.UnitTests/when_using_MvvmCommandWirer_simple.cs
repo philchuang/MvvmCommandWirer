@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
-using Demo.Utils;
+using Microsoft.Practices.Prism.Commands;
 using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming
@@ -94,7 +94,7 @@ namespace MvvmCommandWirer.UnitTests
     }
 
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple : 
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple.ViewModel>
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -117,7 +117,7 @@ namespace MvvmCommandWirer.UnitTests
             }
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
@@ -132,7 +132,7 @@ namespace MvvmCommandWirer.UnitTests
     }
 
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_async :
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_async.ViewModel>
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_async.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -161,7 +161,7 @@ namespace MvvmCommandWirer.UnitTests
 
         protected override void WaitUntilExecuteIsFinished () { myWireTarget.FooAsyncMre.WaitOne (); }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
@@ -211,8 +211,8 @@ namespace MvvmCommandWirer.UnitTests
         }
     }
 
-    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic : 
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic.ViewModel>
+    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -235,7 +235,7 @@ namespace MvvmCommandWirer.UnitTests
             }
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
@@ -295,7 +295,7 @@ namespace MvvmCommandWirer.UnitTests
     }
 
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_no_CanExecute :
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_no_CanExecute.ViewModel>
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_no_CanExecute.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -316,7 +316,7 @@ namespace MvvmCommandWirer.UnitTests
             myCanExecuteExpected = true;
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         public override void then_CanExecute_should_be_called ()
         {
@@ -398,7 +398,7 @@ namespace MvvmCommandWirer.UnitTests
     }
 
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic_static :
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic_static.ViewModel>
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_nonpublic_static.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -456,7 +456,7 @@ namespace MvvmCommandWirer.UnitTests
             }
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) ViewModel.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) ViewModel.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
@@ -509,8 +509,8 @@ namespace MvvmCommandWirer.UnitTests
         }
     }
 
-    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_public_CanExecute_property : 
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_public_CanExecute_property.ViewModel>
+    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_public_CanExecute_property :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_public_CanExecute_property.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -535,7 +535,7 @@ namespace MvvmCommandWirer.UnitTests
             }
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
@@ -588,8 +588,8 @@ namespace MvvmCommandWirer.UnitTests
         }
     }
 
-    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_nonpublic_CanExecute_property : 
-        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_nonpublic_CanExecute_property.ViewModel>
+    public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_nonpublic_CanExecute_property :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_simple_with_nonpublic_CanExecute_property.ViewModel>
     {
         public class ViewModel : WireTargetBase
         {
@@ -614,7 +614,7 @@ namespace MvvmCommandWirer.UnitTests
             }
         }
 
-        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+        protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
