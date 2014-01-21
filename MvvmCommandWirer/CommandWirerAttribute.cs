@@ -97,29 +97,38 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         public override void Configure (CommandWirer wirer, MethodInfo method)
         {
-            if (wirer.ParameterType == null)
-            {
-                if (method.GetParameters ().Count () != 2
-                    || method.GetParameters ().ElementAt (0).ParameterType != typeof (Action)
-                    || method.GetParameters ().ElementAt (1).ParameterType != typeof (Func<bool>))
-                    throw new InvalidOperationException (
-                        "CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action commandExecute, Func<bool> commandCanExecute)."
-                            .FormatWith (method.Name));
-            }
-            else
-            {
-                if (method.GetParameters ().Count () != 2
-                    || method.GetParameters ().ElementAt (0).ParameterType != typeof (Action<>).MakeGenericType (wirer.ParameterType)
-                    || method.GetParameters ().ElementAt (1).ParameterType != typeof (Func<,>).MakeGenericType (wirer.ParameterType, typeof (bool)))
-                    throw new InvalidOperationException (
-                        "CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action<{1}> commandExecute, Func<{1}, bool> commandCanExecute)."
-                            .FormatWith (method.Name, wirer.ParameterType.Name));
-            }
-
             if (method.ReturnType == typeof (void))
                 throw new InvalidOperationException ("CommandInstantiationMethodAttribute target \"{0}\" must have a return type".FormatWith (method.Name));
 
             // TODO CONSIDER check that return type implements ICommand?
+
+            var executeParameterType = wirer.ParameterType == null ? typeof (Action) : typeof (Action<>).MakeGenericType (wirer.ParameterType);
+            var canExecuteParameterType = wirer.ParameterType == null ? typeof (Func<>).MakeGenericType (typeof (bool)) : typeof (Func<,>).MakeGenericType (wirer.ParameterType, typeof (bool));
+
+            if (!method.GetParameters ().Any ())
+            {
+                // don't need to validate anything
+            }
+            else if (method.GetParameters ().Count () == 1)
+            {
+                if (method.GetParameters ().ElementAt (0).ParameterType != executeParameterType)
+                    throw new InvalidOperationException (
+                        "CommandInstantiationMethodAttribute target \"{0}\" must have parameter: ({1} commandExecute)."
+                            .FormatWith (method.Name, wirer.ParameterType == null ? "Action" : "Action<{0}>".FormatWith (wirer.ParameterType.Name)));
+            }
+            else if (method.GetParameters ().Count () == 2)
+            {
+                if (method.GetParameters ().ElementAt (0).ParameterType != executeParameterType)
+                    throw new InvalidOperationException (
+                        "CommandInstantiationMethodAttribute target \"{0}\" must have parameters: ({1} commandExecute, {2} commandCanExecute)."
+                            .FormatWith (method.Name, wirer.ParameterType == null ? "Action" : "Action<{0}>".FormatWith (wirer.ParameterType.Name), wirer.ParameterType == null ? "Func<bool>" : "Func<{0}, bool>".FormatWith (wirer.ParameterType.Name)));
+            }
+            else
+            {
+                throw new InvalidOperationException (
+                    "CommandInstantiationMethodAttribute target \"{0}\" must have parameters: ({1} commandExecute[, {2} commandCanExecute])."
+                        .FormatWith (method.Name, wirer.ParameterType == null ? "Action" : "Action<{0}>".FormatWith (wirer.ParameterType.Name), wirer.ParameterType == null ? "Func<bool>" : "Func<{0}, bool>".FormatWith (wirer.ParameterType.Name)));
+            }
 
             wirer.InstantiationMethod = method;
         }

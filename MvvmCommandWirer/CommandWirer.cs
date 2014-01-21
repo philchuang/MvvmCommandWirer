@@ -54,18 +54,22 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             if (CommandType == null && InstantiationMethod == null)
                 throw new InvalidOperationException ("Either CommandProperty.CommandType or CommandInstantiationMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
-            if (ExecuteMethod == null)
+            if (InstantiationMethod == null && ExecuteMethod == null)
                 throw new InvalidOperationException ("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
             // create delegates for the Command
             var canExecuteDelegate = CommandCanExecuteMethodAttribute.CreateCanExecuteDelegate (CanExecuteMethod, ParameterType, InvokeOn);
-            var executeDelegate = CommandExecuteMethodAttribute.CreateExecuteDelegate (ExecuteMethod, ParameterType, InvokeOn);
+            var executeDelegate = ExecuteMethod != null ? CommandExecuteMethodAttribute.CreateExecuteDelegate (ExecuteMethod, ParameterType, InvokeOn) : null;
 
             // create the Command and set it on the Property
             Object command = null;
             if (InstantiationMethod != null)
             {
-                command = InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate, canExecuteDelegate });
+                command = !InstantiationMethod.GetParameters ().Any ()
+                              ? InstantiationMethod.Invoke (InvokeOn, null)
+                              : InstantiationMethod.GetParameters ().Count () == 1
+                                    ? InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate })
+                                    : InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate, canExecuteDelegate });
             }
             else if (CommandType != null)
             {

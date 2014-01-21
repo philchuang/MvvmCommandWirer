@@ -50,6 +50,46 @@ namespace MvvmCommandWirer.UnitTests
         }
     }
 
+    public class when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_with_CommandInstantiationMethodAttribute_no_methods :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_with_CommandInstantiationMethodAttribute_no_methods.ViewModel>
+    {
+        public class ViewModel : WireTargetBase
+        {
+            [CommandProperty]
+            public ICommand FooCommand { get; set; }
+
+            [CommandInstantiationMethodAttribute]
+            internal DelegateCommand InstantiateFooCommand ()
+            { return new DelegateCommand (Foo, CanFoo); }
+
+            internal bool CanFoo ()
+            {
+                CanExecuteCalled = true;
+                return CanExecuteReturnValue;
+            }
+
+            internal void Foo ()
+            {
+                ExecuteCalled = true;
+            }
+        }
+
+        protected override DelegateCommand GetCommandFromWireTarget () { return (DelegateCommand) myWireTarget.FooCommand; }
+
+        protected override void AssertWireAllResultsMatch ()
+        {
+            Assert.IsNotNull (myWireAllResults);
+            Assert.AreEqual (1, myWireAllResults.Count);
+
+            var wirer = myWireAllResults[0];
+            Assert.AreEqual (typeof (ViewModel).GetProperty (Extensions.GetPropertyName (() => myWireTarget.FooCommand)), wirer.CommandProperty);
+            Assert.IsNull (wirer.CanExecuteMethod);
+            Assert.IsNull (wirer.ExecuteMethod);
+            Assert.AreEqual (typeof (ViewModel).GetMethod (Extensions.GetMethodName (() => myWireTarget.InstantiateFooCommand ()), BindingFlags.NonPublic | BindingFlags.Instance), wirer.InstantiationMethod);
+        }
+    }
+
+    
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute :
         when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute.ViewModel>
     {
@@ -141,7 +181,7 @@ namespace MvvmCommandWirer.UnitTests
             public ICommand FooCommand { get; set; }
 
             [CommandInstantiationMethodAttribute]
-            internal DelegateCommand InstantiateFooCommand ()
+            internal DelegateCommand InstantiateFooCommand (Action execute, Func<bool> canExecute, Object extraParam)
             { throw new Exception ("This code should be unreachable"); }
 
             [CommandCanExecuteMethod]
@@ -159,8 +199,8 @@ namespace MvvmCommandWirer.UnitTests
 
             m_IsBecauseOfExceptionExpected = true;
             m_ExpectedBecauseOfException =
-                new InvalidOperationException ("CommandInstantiationMethodAttribute target \"{0}\" must have 2 parameters: (Action commandExecute, Func<bool> commandCanExecute)."
-                                                   .FormatWith (Extensions.GetMethodName (() => myWireTarget.InstantiateFooCommand ())));
+                new InvalidOperationException ("CommandInstantiationMethodAttribute target \"{0}\" must have parameters: (Action commandExecute[, Func<bool> commandCanExecute])."
+                                                   .FormatWith (Extensions.GetMethodName (() => myWireTarget.InstantiateFooCommand (null, null, null))));
         }
     }
 
