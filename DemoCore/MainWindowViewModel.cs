@@ -6,26 +6,13 @@ using System.Linq.Expressions;
 using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
+using Demo.Utils;
 using Microsoft.Practices.Prism.Commands;
 
 namespace Demo
 {
-    public class MainWindowViewModel : INotifyPropertyChanged
+    public class MainWindowViewModel : NotifyPropertyChangedBase
     {
-        public event PropertyChangedEventHandler PropertyChanged = delegate { };
-        protected event PropertyChangedEventHandler PropertyChangedInternal = delegate { };
-
-        protected void RaisePropertyChanged<T> (Expression<Func<T>> propGet)
-        {
-            RaisePropertyChanged (propGet.GetPropertyName ());
-        }
-
-        protected void RaisePropertyChanged (String propertyName)
-        {
-            PropertyChanged (this, new PropertyChangedEventArgs (propertyName));
-            PropertyChangedInternal (this, new PropertyChangedEventArgs (propertyName));
-        }
-
         // ---------------- OLD WAY TO DO PARAMETERLESS COMMAND --------------------------------------------------------
 
         public ICommand FooCommand { get; private set; }
@@ -68,7 +55,7 @@ namespace Demo
             BarCommand = new DelegateCommand<String> (Bar, CanBar);
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "BarParameter")
-                                               ((DelegateCommand) BarCommand).RaiseCanExecuteChanged ();
+                                               ((DelegateCommand<String>) BarCommand).RaiseCanExecuteChanged ();
                                        };
 
             // ------------ NEW WAY TO INITIALIZE ----------------------------------------------------------------------
@@ -110,6 +97,24 @@ namespace Demo
         private void Foo3 ()
         { Output = "Foo3!"; }
 
+        // ---------------- NEW WAY TO DO PARAMETERLESS COMMAND WITH LAMBDAS  --------------------------------
+
+        [CommandProperty]
+        public ICommand Foo4Command { get; private set; }
+
+        [CommandInstantiationMethod]
+        private ICommand InstantiateFoo4Command ()
+        { return new DelegateCommand (() => Output = "Foo4!", () => myCanFoo); }
+
+        [CommandInitializationMethod]
+        private void InitializeFoo4Command (ICommand command)
+        {
+            PropertyChangedInternal += (sender, args) => {
+                                           if (args.PropertyName == "CanFoo")
+                                               ((DelegateCommand) command).RaiseCanExecuteChanged ();
+                                       };
+        }
+
         // ---------------- NEW WAY TO DO PARAMETERIZED COMMAND --------------------------------------------------------
 
         [CommandProperty (commandType: typeof (DelegateCommand<String>), paramType: typeof (String))]
@@ -146,7 +151,7 @@ namespace Demo
         {
             PropertyChangedInternal += (sender, args) => {
                                            if (args.PropertyName == "BarParameter")
-                                               ((DelegateCommand) Bar3Command).RaiseCanExecuteChanged ();
+                                               ((DelegateCommand<String>) Bar3Command).RaiseCanExecuteChanged ();
                                        };
         }
 

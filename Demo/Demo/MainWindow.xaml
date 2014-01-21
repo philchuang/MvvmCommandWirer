@@ -6,17 +6,22 @@
         xmlns:demoCore="clr-namespace:Demo;assembly=DemoCore"
         mc:Ignorable="d" 
         d:DataContext="{Binding Source={d:DesignInstance Type=demoCore:MainWindowViewModel, IsDesignTimeCreatable=True}}"
-        Title="CommandWirer example" Height="400" Width="525">
+        Title="CommandWirer example" Height="700" Width="525">
         
     <Grid Margin="5,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />
             <RowDefinition Height="50" />
             <RowDefinition Height="50" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="50" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="50" />
-            <RowDefinition Height="25" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="50" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -32,14 +37,25 @@
 
         <Button Grid.Row="2" Grid.Column="0" Content="Foo" Margin="5,10" Command="{Binding FooCommand}" />
         <Button Grid.Row="2" Grid.Column="2" Content="Bar" Margin="5,10" Command="{Binding BarCommand}" CommandParameter="{Binding BarParameter}" />
+        <TextBlock Grid.Row="3" Grid.Column="0" Margin="5,0,5,5" TextWrapping="Wrap">Standard MVVM parameterless ICommand</TextBlock>
+        <TextBlock Grid.Row="3" Grid.Column="2" Margin="5,0,5,5" TextWrapping="Wrap">Standard MVVM parameterized ICommand</TextBlock>
 
-        <Button Grid.Row="3" Grid.Column="0" Content="Foo2" Margin="5,10" Command="{Binding Foo2Command}" />
-        <Button Grid.Row="3" Grid.Column="2" Content="Bar2" Margin="5,10" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
+        <Button Grid.Row="4" Grid.Column="0" Content="Foo2" Margin="5,10" Command="{Binding Foo2Command}" />
+        <Button Grid.Row="4" Grid.Column="2" Content="Bar2" Margin="5,10" Command="{Binding Bar2Command}" CommandParameter="{Binding BarParameter}" />
+        <TextBlock Grid.Row="5" Grid.Column="0" Margin="5,0,5,5" TextWrapping="Wrap">Command Wirer parameterless w/ init, can execute, execute</TextBlock>
+        <TextBlock Grid.Row="5" Grid.Column="2" Margin="5,0,5,5" TextWrapping="Wrap">Command Wirer parameterized w/ init, can execute, execute</TextBlock>
 
-        <Button Grid.Row="4" Grid.Column="0" Content="Always-enabled Foo3" Margin="5,10" Command="{Binding Foo3Command}" />
-        <Button Grid.Row="4" Grid.Column="2" Content="Bar3" Margin="5,10" Command="{Binding Bar3Command}" CommandParameter="{Binding BarParameter}" />
+        <Button Grid.Row="6" Grid.Column="0" Content="Always-enabled Foo3" Margin="5,10" Command="{Binding Foo3Command}" />
+        <Button Grid.Row="6" Grid.Column="2" Content="Bar3" Margin="5,10" Command="{Binding Bar3Command}" CommandParameter="{Binding BarParameter}" />
+        <TextBlock Grid.Row="7" Grid.Column="0" Margin="5,0,5,5" TextWrapping="Wrap">Command Wirer parameterless w/ default can execute</TextBlock>
+        <TextBlock Grid.Row="7" Grid.Column="2" Margin="5,0,5,5" TextWrapping="Wrap">Command Wirer parameterized w/ create, init, can execute, execute</TextBlock>
 
-        <TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
-        <TextBox   Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Output}" Margin="5,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+        <Button Grid.Row="8" Grid.Column="0" Content="Foo4" Margin="5,10" Command="{Binding Foo4Command}" />
+        <!--<Button Grid.Row="8" Grid.Column="2" Content="Bar3" Margin="5,10" Command="{Binding Bar4Command}" CommandParameter="{Binding BarParameter}" />-->
+        <TextBlock Grid.Row="9" Grid.Column="0" Margin="5,0,5,5" TextWrapping="Wrap">Command Wirer parameterless w/ create via lambdas</TextBlock>
+        <!--<TextBlock Grid.Row="9" Grid.Column="2" Margin="5,0,5,5" TextWrapping="Wrap">Command Wirer parameterized w/ create, init, can execute, execute</TextBlock>-->
+
+        <TextBlock Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Center" VerticalAlignment="Bottom">Output</TextBlock>
+        <TextBox   Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="3" Text="{Binding Output}" Margin="5,10" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
     </Grid>
 </Window>

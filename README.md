@@ -10,13 +10,19 @@ Why would I want to use it?
 Wiring up Commands in MVVM apps is painful, because you'll often have 4 discrete blocks of code relating to a single command:
 
 1. The Command property on the ViewModel
-2. A Func<bool> or Predicate<T> which is referenced by Command.CanExecute
-3. An Action or Action<T> which is referenced by Command.Execute
-4. Instantiation and Initialization code which instantiates the Command and links it to the CanExecute/Execute delegates
+2. A Func&lt;bool&gt; or Predicate&lt;T&gt; which is referenced by Command.CanExecute
+3. An Action or Action&lt;T&gt; which is referenced by Command.Execute
+4. Instantiation and Initialization code which instantiates the Command and links it to the CanExecute/Execute delegates, and sets up relations to other properties.
 
-While the first 3 blocks can be located contigiously (and thus easier to find/maintain), the initialization code is often all done in the constructor, or in a class-wide initialization method.
+While the first 3 blocks can be located contiguously (and thus easier to find/maintain), the Instantiation & Initialization code is often all done in the constructor, or in a class-wide initialization method.
+
+This may be a minor annoyance to most, but it really bugs me - because I like to have all code that's related to each other located grouped together in the source code. I don't like having to jump back and forth inside of a many-hundreds-of-lines file - it takes a lot more concentration and effort while developing.
+
+Plus, a the instantiation code is very often simple repetitive plumbing code. Why not try to automate it?
 
 For instance:
+
+For example, let's say I have a ViewModel with 2 Commands, Foo and Bar:
 
 	// 1. Command Property
 	public ICommand FooCommand { get; private set; }
@@ -37,6 +43,17 @@ For instance:
 	private void Foo ()
 	{ if (CanFoo) Output = "Foo!"; }
 
+	// 1. Command Property
+	public ICommand BarCommand { get; private set; }
+
+	// 2. CanExecute
+	public bool CanBar (String barParam)
+	{ return !String.IsNullOrEmpty (barParam); }
+
+	// 3. Execute
+	private void Bar ()
+	{ if (CanBar) Output = "Bar!"; }
+
 	// ... many lines later ...
 
 	public MyViewModel ()
@@ -47,7 +64,10 @@ For instance:
 			(sender, args) =>
 				if (args.PropertyName == "CanFoo")
 					((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
+		BarCommand = new DelegateCommand<String> (Bar, CanBar);
 	}
+
+It's #4 that bugs me, having the Command instantiation & initialization code located far away from the actual Command logic.
 
 Could there be a cleaner way? That's the goal of this utility:
 
@@ -83,6 +103,36 @@ Could there be a cleaner way? That's the goal of this utility:
 	private void Foo ()
 	{ if (CanFoo) Output = "Foo!"; }
 
+	// 1. Command Property
+	[CommandProperty(commandType: typeof(DelegateCommand<String>), parameterType: typeof(String))]
+	public ICommand BarCommand { get; private set; }
+
+	// 2. CanExecute
+	[CommandCanExecuteMethod]
+	public bool CanBar (String barParameter)
+	{ return !String.IsNullOrEmpty(barParameter); }
+
+	// 3. Execute
+	[CommandExecuteMethod]
+	private void Bar (String barParameter)
+	{ if (CanBar (barParameter)) Output = "Bar!"; }
+
+	// 1. Command Property
+	[CommandProperty]
+	public DelegateCommand HelloWorldCommand { get; private set; }
+
+	// 4. Initialization
+	[CommandInitializationMethod]
+	private DelegateCommand InstantiateHelloWorldCommand()
+	{
+		return new DelegateCommand (() => Output = "Hello world!", () => true);
+	}
+
+	// 3. Execute
+	[CommandExecuteMethod]
+	private void HelloWorld ()
+	{ Output = "Hello World!"; }
+
 	// ... dozens of lines later ...
 
 	public MyViewModel ()
@@ -96,16 +146,18 @@ So now, all the code related to a specific Command can now be located in a singl
 Status
 ------
 
-This is very much a work-in-progress.
+This is still very much a work-in-progress, I have done very little real-world testing with it. So I would greatly appreciate any feedback on this!
 
 Implemented Features:
+
 * Parameterless and Parameterized Commands
 * Custom instantiation and initialization methods
 * CanExecute method is optional, will default to always return true
 * CanExecute method can be a Method or a Property
 
 Caveats:
-* If using CommandPropertyAttribute to instantiate the ICommand, it needs to have a constructor that accepts (Action, Func<bool>) or (Action<T>, Func<T,bool>). Otherwise, use the CommandInstantiationMethod attribute to declare the method that will instantiate the Command.
+
+* If using CommandPropertyAttribute to instantiate the ICommand, the Command Type needs to have a constructor like (Action, Func&lt;bool&gt;), or (Action&lt;T&gt;, Func&lt;T,bool&gt;). Otherwise, use the CommandInstantiationMethod attribute to declare the method that will instantiate the Command.
 
 Shout-outs
 ----------
