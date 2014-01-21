@@ -24,122 +24,125 @@ For instance:
 
 For example, let's say I have a ViewModel with 2 Commands, Foo and Bar:
 
-	// 1. Command Property
-	public ICommand FooCommand { get; private set; }
+```c#
+// 1. Command Property
+public ICommand FooCommand { get; private set; }
 
-	// 2. CanExecute
-	private bool myCanFoo;
-	public bool CanFoo
+// 2. CanExecute
+private bool myCanFoo;
+public bool CanFoo
+{
+	get { return myCanFoo; }
+	set
 	{
-		get { return myCanFoo; }
-		set
-		{
-			myCanFoo = value;
-			RaisePropertyChanged();
-		}
+		myCanFoo = value;
+		RaisePropertyChanged();
 	}
+}
 
-	// 3. Execute
-	private void Foo ()
-	{ if (CanFoo) Output = "Foo!"; }
+// 3. Execute
+private void Foo ()
+{ if (CanFoo) Output = "Foo!"; }
 
-	// 1. Command Property
-	public ICommand BarCommand { get; private set; }
+// 1. Command Property
+public ICommand BarCommand { get; private set; }
 
-	// 2. CanExecute
-	public bool CanBar (String barParam)
-	{ return !String.IsNullOrEmpty (barParam); }
+// 2. CanExecute
+public bool CanBar (String barParam)
+{ return !String.IsNullOrEmpty (barParam); }
 
-	// 3. Execute
-	private void Bar ()
-	{ if (CanBar) Output = "Bar!"; }
+// 3. Execute
+private void Bar ()
+{ if (CanBar) Output = "Bar!"; }
 
-	// ... many lines later ...
+// ... many lines later ...
 
-	public MyViewModel ()
-	{
-		// 4. Instantiation & Initialization for each individual ICommand
-		FooCommand = new DelegateCommand (Foo, () => CanFoo);
-		PropertyChanged +=
-			(sender, args) =>
-				if (args.PropertyName == "CanFoo")
-					((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
-		BarCommand = new DelegateCommand<String> (Bar, CanBar);
-	}
-
+public MyViewModel ()
+{
+	// 4. Instantiation & Initialization for each individual ICommand
+	FooCommand = new DelegateCommand (Foo, () => CanFoo);
+	PropertyChanged +=
+		(sender, args) =>
+			if (args.PropertyName == "CanFoo")
+				((DelegateCommand) FooCommand).InvalidateCanExecuteChanged ();
+	BarCommand = new DelegateCommand<String> (Bar, CanBar);
+}
+```
 It's #4 that bugs me, having the Command instantiation & initialization code located far away from the actual Command logic.
 
 Could there be a cleaner way? That's the goal of this utility:
 
-	// 1. Command Property
-	[CommandProperty(commandType: typeof(DelegateCommand))]
-	public ICommand FooCommand { get; private set; }
+```c#
+// 1. Command Property
+[CommandProperty(commandType: typeof(DelegateCommand))]
+public ICommand FooCommand { get; private set; }
 
-	// 4. Initialization
-	[CommandInitializationMethod]
-	private void InitializeFooCommand(DelegateCommand command)
+// 4. Initialization
+[CommandInitializationMethod]
+private void InitializeFooCommand(DelegateCommand command)
+{
+	PropertyChanged +=
+		(sender, args) =>
+			if (args.PropertyName == "CanFoo")
+				command.InvalidateCanExecuteChanged ();
+}
+
+private bool myCanFoo;
+// 2. CanExecute
+[CommandCanExecuteMethod]
+public bool CanFoo
+{
+	get { return myCanFoo; }
+	set
 	{
-		PropertyChanged +=
-			(sender, args) =>
-				if (args.PropertyName == "CanFoo")
-					command.InvalidateCanExecuteChanged ();
+		myCanFoo = value;
+		RaisePropertyChanged();
 	}
+}
 
-	private bool myCanFoo;
-	// 2. CanExecute
-	[CommandCanExecuteMethod]
-	public bool CanFoo
-	{
-		get { return myCanFoo; }
-		set
-		{
-			myCanFoo = value;
-			RaisePropertyChanged();
-		}
-	}
+// 3. Execute
+[CommandExecuteMethod]
+private void Foo ()
+{ if (CanFoo) Output = "Foo!"; }
 
-	// 3. Execute
-	[CommandExecuteMethod]
-	private void Foo ()
-	{ if (CanFoo) Output = "Foo!"; }
+// 1. Command Property
+[CommandProperty(commandType: typeof(DelegateCommand<String>), parameterType: typeof(String))]
+public ICommand BarCommand { get; private set; }
 
-	// 1. Command Property
-	[CommandProperty(commandType: typeof(DelegateCommand<String>), parameterType: typeof(String))]
-	public ICommand BarCommand { get; private set; }
+// 2. CanExecute
+[CommandCanExecuteMethod]
+public bool CanBar (String barParameter)
+{ return !String.IsNullOrEmpty(barParameter); }
 
-	// 2. CanExecute
-	[CommandCanExecuteMethod]
-	public bool CanBar (String barParameter)
-	{ return !String.IsNullOrEmpty(barParameter); }
+// 3. Execute
+[CommandExecuteMethod]
+private void Bar (String barParameter)
+{ if (CanBar (barParameter)) Output = "Bar!"; }
 
-	// 3. Execute
-	[CommandExecuteMethod]
-	private void Bar (String barParameter)
-	{ if (CanBar (barParameter)) Output = "Bar!"; }
+// 1. Command Property
+[CommandProperty]
+public DelegateCommand HelloWorldCommand { get; private set; }
 
-	// 1. Command Property
-	[CommandProperty]
-	public DelegateCommand HelloWorldCommand { get; private set; }
+// 4. Initialization
+[CommandInitializationMethod]
+private DelegateCommand InstantiateHelloWorldCommand()
+{
+	return new DelegateCommand (() => Output = "Hello world!", () => true);
+}
 
-	// 4. Initialization
-	[CommandInitializationMethod]
-	private DelegateCommand InstantiateHelloWorldCommand()
-	{
-		return new DelegateCommand (() => Output = "Hello world!", () => true);
-	}
+// 3. Execute
+[CommandExecuteMethod]
+private void HelloWorld ()
+{ Output = "Hello World!"; }
 
-	// 3. Execute
-	[CommandExecuteMethod]
-	private void HelloWorld ()
-	{ Output = "Hello World!"; }
+// ... dozens of lines later ...
 
-	// ... dozens of lines later ...
-
-	public MyViewModel ()
-	{
-		// 4. Instantiation of ALL ICommands using CommandWirer
-		CommandWirer.WireAll (this);
-	}
+public MyViewModel ()
+{
+	// 4. Instantiation of ALL ICommands using CommandWirer
+	CommandWirer.WireAll (this);
+}
+```
 
 So now, all the code related to a specific Command can now be located in a single contigiuous block, instead of spread throughout the ViewModel file.
 
