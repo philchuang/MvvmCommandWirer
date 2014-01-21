@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Com.PhilChuang.Utils;
 using Com.PhilChuang.Utils.MvvmCommandWirer;
 using Microsoft.Practices.Prism.Commands;
+using NUnit.Framework;
 
 // ReSharper disable InconsistentNaming
 namespace MvvmCommandWirer.UnitTests
@@ -32,6 +33,31 @@ namespace MvvmCommandWirer.UnitTests
             m_IsBecauseOfExceptionExpected = true;
             m_ExpectedBecauseOfException = new InvalidOperationException ("CommandPropertyAttribute must be applied to a property, not method \"{0}\"."
                                                                               .FormatWith (Extensions.GetMethodName (() => myWireTarget.FooCommand ())));
+        }
+    }
+
+    public class when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_invalid_inferred_CommandType :
+        when_using_MvvmCommandWirer_with_exception<ICommand, when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_invalid_inferred_CommandType.ViewModel>
+    {
+        public class ViewModel : WireTargetBase
+        {
+            [CommandProperty]
+            public ICommand FooCommand { get; set; }
+
+            [CommandExecuteMethod]
+            public void Foo ()
+            {
+                ExecuteCalled = true;
+            }
+        }
+
+        protected override void Because_of ()
+        {
+            base.Because_of ();
+
+            m_IsBecauseOfExceptionExpected = true;
+            m_ExpectedBecauseOfException = new InvalidOperationException ("CommandProperty.CommandType must be a concrete class for key: \"{0}\""
+                                                                              .FormatWith (Extensions.GetMethodName (() => myWireTarget.Foo ())));
         }
     }
 }

@@ -58,7 +58,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         public override void Configure (CommandWirer wirer, PropertyInfo prop)
         {
             wirer.CommandProperty = prop; // mandatory
-            wirer.CommandType = CommandType; // optional if CommandInstantiationMethod is used
+            wirer.CommandType = CommandType ?? prop.PropertyType; // optional if CommandInstantiationMethod is used
             wirer.ParameterType = ParameterType; // optional if not parameterized
         }
 

@@ -69,6 +69,9 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             }
             else if (CommandType != null)
             {
+                if (CommandType.IsAbstract || CommandType.IsInterface)
+                    throw new InvalidOperationException ("CommandProperty.CommandType must be a concrete class for key: \"{0}\"".FormatWith (Key));
+
                 command = Activator.CreateInstance (CommandType, executeDelegate, canExecuteDelegate);
             }
             else

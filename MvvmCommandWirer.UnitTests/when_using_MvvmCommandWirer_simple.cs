@@ -627,4 +627,50 @@ namespace MvvmCommandWirer.UnitTests
             Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.Foo (null)), wirer.ExecuteMethod);
         }
     }
+
+    public class when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_inferred_CommandType_simple :
+        when_using_MvvmCommandWirer_successfully<DelegateCommand, when_using_MvvmCommandWirer_with_parameterless_DelegateCommand_inferred_CommandType_simple.ViewModel>
+    {
+        public class ViewModel : WireTargetBase
+        {
+            [CommandProperty]
+            public DelegateCommand FooCommand { get; set; }
+
+            [CommandExecuteMethod]
+            public void Foo ()
+            {
+                ExecuteCalled = true;
+            }
+        }
+
+        protected override void Establish_context ()
+        {
+            base.Establish_context ();
+            myCanExecuteExpected = true;
+        }
+
+        protected override DelegateCommand GetCommandFromWireTarget () { return myWireTarget.FooCommand; }
+
+        public override void then_CanExecute_should_be_called ()
+        {
+            // don't need to test since there's nothing to call
+        }
+
+        public override void then_CanExecute_parameter_should_match ()
+        {
+            // don't need to test since there's nothing to call
+        }
+
+        protected override void AssertWireAllResultsMatch ()
+        {
+            Assert.IsNotNull (myWireAllResults);
+            Assert.AreEqual (1, myWireAllResults.Count);
+
+            var wirer = myWireAllResults[0];
+            Assert.AreEqual (Extensions.GetPropertyInfo (() => myWireTarget.FooCommand), wirer.CommandProperty);
+            Assert.AreEqual (typeof (DelegateCommand), wirer.CommandType);
+            Assert.IsNull (wirer.CanExecuteMethod);
+            Assert.AreEqual (Extensions.GetMethodInfo (() => myWireTarget.Foo ()), wirer.ExecuteMethod);
+        }
+    }
 }

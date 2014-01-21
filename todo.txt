@@ -1,2 +1,1 @@
 * finish xmldoc
-* update CommandProperty so that commandType can be inferred from the command property return type, if it is a concrete class
