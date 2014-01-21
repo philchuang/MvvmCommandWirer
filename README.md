@@ -10,8 +10,8 @@ Why would I want to use it?
 Wiring up Commands in MVVM apps is painful, because you'll often have 4 discrete blocks of code relating to a single command:
 
 1. The Command property on the ViewModel
-2. A Func&lt;bool&gt; or Predicate&lt;T&gt; which is referenced by Command.CanExecute
-3. An Action or Action&lt;T&gt; which is referenced by Command.Execute
+2. A `Func&lt;bool&gt;` or `Predicate&lt;T&gt;` which is referenced by Command.CanExecute
+3. An `Action` or `Action&lt;T&gt;` which is referenced by Command.Execute
 4. Instantiation and Initialization code which instantiates the Command and links it to the CanExecute/Execute delegates, and sets up relations to other properties.
 
 While the first 3 blocks can be located contiguously (and thus easier to find/maintain), the Instantiation & Initialization code is often all done in the constructor, or in a class-wide initialization method.
@@ -157,7 +157,7 @@ Implemented Features:
 
 Caveats:
 
-* If using CommandPropertyAttribute to instantiate the ICommand, the Command Type needs to have a constructor like (Action, Func&lt;bool&gt;), or (Action&lt;T&gt;, Func&lt;T,bool&gt;). Otherwise, use the CommandInstantiationMethod attribute to declare the method that will instantiate the Command.
+* If using `[CommandProperty]` attribute to instantiate, the specified Command Type needs to have a constructor like `(Action, Func&lt;bool&gt;)`, or `(Action&lt;T&gt;, Func&lt;T,bool&gt;)`. Otherwise, use the `[CommandInstantiationMethod]` attribute to declare the method that will instantiate the Command.
 
 Shout-outs
 ----------
