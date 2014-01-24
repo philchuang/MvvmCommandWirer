@@ -10,6 +10,7 @@
     <projectUrl>http://github.com/philchuang/MvvmCommandWirer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
+		<releaseNotes>CommandPropertyAttribute can now infer CommandType. CommandExecuteMethodAttribute is now optional, if instantion method is used.</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MVVM Command PCL</tags>
   </metadata>
