@@ -1,1 +1,2 @@
+* detect if Command constructor uses Func<bool>/Func<T,bool> or Predicate<T>, construct appropriate delegate
 * finish xmldoc
