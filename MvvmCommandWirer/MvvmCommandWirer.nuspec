@@ -10,7 +10,7 @@
     <projectUrl>http://github.com/philchuang/MvvmCommandWirer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-		<releaseNotes>Added support for Predicate<T> instead of Func<T, bool> for CanExecute method delegates.</releaseNotes>
+		<releaseNotes>Added support for Predicate&lt;T&gt; instead of Func&lt;T, bool&gt; for CanExecute method delegates.</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <tags>MVVM Command PCL</tags>
   </metadata>
