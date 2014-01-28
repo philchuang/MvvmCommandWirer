@@ -228,7 +228,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             wirer.CanExecuteMethod = method;
         }
 
-        public static Delegate CreateCanExecuteDelegate (MethodInfo canExecuteMethod, Type commandParameterType, Object invokeOn)
+        public static Delegate CreateCanExecuteFuncDelegate (MethodInfo canExecuteMethod, Type commandParameterType, Object invokeOn)
         {
             if (canExecuteMethod != null)
             {
@@ -241,7 +241,7 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                 if (!canExecuteMethod.GetParameters ().Any ())
                 {
                     var del = Delegate.CreateDelegate (typeof (Func<bool>), invokeOn, canExecuteMethod);
-                    return CreateParameterizedFuncBoolWrap (commandParameterType, (Func<bool>) del);
+                    return CreateFuncBoolToFuncTBoolWrap (commandParameterType, (Func<bool>) del);
                 }
 
                 return Delegate.CreateDelegate (typeof (Func<,>).MakeGenericType (commandParameterType, typeof (bool)), invokeOn, canExecuteMethod);
@@ -249,21 +249,60 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
             if (commandParameterType != null)
             {
-                return CreateParameterizedFuncBoolWrap (commandParameterType, () => true);
+                return CreateFuncBoolToFuncTBoolWrap (commandParameterType, () => true);
             }
 
             return (Func<bool>) (() => true);
         }
 
-        private static Delegate CreateParameterizedFuncBoolWrap (Type parameterType, Func<bool> func)
+        private static Delegate CreateFuncBoolToFuncTBoolWrap (Type parameterType, Func<bool> func)
         {
-            var wrapMethodInfo = WrapFuncBoolMethodInfo.MakeGenericMethod (parameterType);
+			var wrapMethodInfo = WrapFuncBoolToFuncTBoolMethodInfoMethodInfo.MakeGenericMethod (parameterType);
             return (Delegate) wrapMethodInfo.Invoke (null, new object[] { func });
         }
 
-        private static readonly MethodInfo WrapFuncBoolMethodInfo = Extensions.GetMethodInfo (() => WrapFuncBool<Object> (null)).GetGenericMethodDefinition ();
+		private static readonly MethodInfo WrapFuncBoolToFuncTBoolMethodInfoMethodInfo = Extensions.GetMethodInfo (() => WrapFuncBoolToFuncTBoolMethodInfo<Object> (null)).GetGenericMethodDefinition ();
 
-        private static Func<T, bool> WrapFuncBool<T> (Func<bool> func)
+		private static Func<T, bool> WrapFuncBoolToFuncTBoolMethodInfo<T> (Func<bool> func)
+        {
+            return _ => func ();
+        }
+
+        public static Delegate CreateCanExecutePredicateDelegate (MethodInfo canExecuteMethod, Type commandParameterType, Object invokeOn)
+        {
+			commandParameterType.ThrowIfNull ("commandParameterType");
+
+            if (canExecuteMethod != null)
+            {
+                if (canExecuteMethod.IsStatic)
+                    invokeOn = null;
+
+                if (!canExecuteMethod.GetParameters ().Any ())
+                {
+                    var del = Delegate.CreateDelegate (typeof (Func<bool>), invokeOn, canExecuteMethod);
+					return CreateFuncBoolToPredicateTWrap (commandParameterType, (Func<bool>) del);
+                }
+
+                return Delegate.CreateDelegate (typeof (Predicate<>).MakeGenericType (commandParameterType), invokeOn, canExecuteMethod);
+            }
+
+            if (commandParameterType != null)
+            {
+				return CreateFuncBoolToPredicateTWrap (commandParameterType, () => true);
+            }
+
+            return (Func<bool>) (() => true);
+        }
+
+        private static Delegate CreateFuncBoolToPredicateTWrap (Type parameterType, Func<bool> func)
+        {
+			var wrapMethodInfo = WrapFuncBoolToPredicateTMethodInfo.MakeGenericMethod (parameterType);
+            return (Delegate) wrapMethodInfo.Invoke (null, new object[] { func });
+        }
+
+		private static readonly MethodInfo WrapFuncBoolToPredicateTMethodInfo = Extensions.GetMethodInfo (() => WrapFuncBoolToPredicateT<Object> (null)).GetGenericMethodDefinition ();
+
+        private static Predicate<T> WrapFuncBoolToPredicateT<T> (Func<bool> func)
         {
             return _ => func ();
         }

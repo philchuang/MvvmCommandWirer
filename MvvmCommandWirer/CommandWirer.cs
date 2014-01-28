@@ -43,61 +43,96 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         /// <summary>
         /// Wires up a single Command
         /// </summary>
-        public void Wire ()
-        {
-            if (CommandProperty == null)
-                throw new InvalidOperationException ("{0} requires an CommandProperty value for key: \"{1}\"".FormatWith (GetType ().Name, Key));
+		public void Wire ()
+		{
+			if (CommandProperty == null)
+				throw new InvalidOperationException ("{0} requires an CommandProperty value for key: \"{1}\"".FormatWith (GetType ().Name, Key));
 
-            if (InvokeOn == null)
-                throw new InvalidOperationException ("{0} requires an InvokeOn value for key: \"{1}\"".FormatWith (GetType ().Name, Key));
+			if (InvokeOn == null)
+				throw new InvalidOperationException ("{0} requires an InvokeOn value for key: \"{1}\"".FormatWith (GetType ().Name, Key));
 
-            if (CommandType == null && InstantiationMethod == null)
-                throw new InvalidOperationException ("Either CommandProperty.CommandType or CommandInstantiationMethod must be defined for key: \"{0}\"".FormatWith (Key));
+			if (CommandType == null && InstantiationMethod == null)
+				throw new InvalidOperationException ("Either CommandProperty.CommandType or CommandInstantiationMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
-            if (InstantiationMethod == null && ExecuteMethod == null)
-                throw new InvalidOperationException ("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith (Key));
+			if (InstantiationMethod == null && ExecuteMethod == null)
+				throw new InvalidOperationException ("CommandExecuteMethod must be defined for key: \"{0}\"".FormatWith (Key));
 
-            // create delegates for the Command
-            var canExecuteDelegate = CommandCanExecuteMethodAttribute.CreateCanExecuteDelegate (CanExecuteMethod, ParameterType, InvokeOn);
-            var executeDelegate = ExecuteMethod != null ? CommandExecuteMethodAttribute.CreateExecuteDelegate (ExecuteMethod, ParameterType, InvokeOn) : null;
+			var predicateType = ParameterType != null ? typeof (Predicate<>).MakeGenericType (ParameterType) : null;
 
-            // create the Command and set it on the Property
-            Object command = null;
-            if (InstantiationMethod != null)
-            {
-                command = !InstantiationMethod.GetParameters ().Any ()
-                              ? InstantiationMethod.Invoke (InvokeOn, null)
-                              : InstantiationMethod.GetParameters ().Count () == 1
-                                    ? InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate })
-                                    : InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate, canExecuteDelegate });
-            }
-            else if (CommandType != null)
-            {
-                if (CommandType.IsAbstract || CommandType.IsInterface)
-                    throw new InvalidOperationException ("CommandProperty.CommandType must be a concrete class for key: \"{0}\"".FormatWith (Key));
+			// create delegates for the Command
+			var canExecuteDelegate = CommandCanExecuteMethodAttribute.CreateCanExecuteFuncDelegate (CanExecuteMethod, ParameterType, InvokeOn);
+			var executeDelegate = ExecuteMethod != null ? CommandExecuteMethodAttribute.CreateExecuteDelegate (ExecuteMethod, ParameterType, InvokeOn) : null;
 
-                command = Activator.CreateInstance (CommandType, executeDelegate, canExecuteDelegate);
-            }
-            else
-            {
-                // this line shouldn't ever be hit
-                throw new InvalidOperationException (String.Format ("Did not have an Command instantiation method for key: \"{0}\"", Key));
-            }
-            CommandProperty.SetValue (InvokeOn, command, null);
+			// create the Command and set it on the Property
+			Object command = null;
+			if (InstantiationMethod != null)
+			{
+				if (!InstantiationMethod.GetParameters ().Any ())
+				{
+					command = InstantiationMethod.Invoke (InvokeOn, null);
+				}
+				else if (InstantiationMethod.GetParameters ().Count () == 1)
+				{
+					command = InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate });
+				}
+				else if (InstantiationMethod.GetParameters ()[1].ParameterType == canExecuteDelegate.GetType ())
+				{
+					command = InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate, canExecuteDelegate });
+				}
+				else if (InstantiationMethod.GetParameters ()[1].ParameterType == predicateType)
+				{
+					canExecuteDelegate = CommandCanExecuteMethodAttribute.CreateCanExecutePredicateDelegate (CanExecuteMethod, ParameterType, InvokeOn);
+					command = InstantiationMethod.Invoke (InvokeOn, new object[] { executeDelegate, canExecuteDelegate });
+				}
+				else
+				{
+					throw new InvalidOperationException ("Unable to invoke InstantiationMethod for key: \"{0}\"".FormatWith (Key));
+				}
+			}
+			else if (CommandType != null)
+			{
+				if (CommandType.IsAbstract || CommandType.IsInterface)
+					throw new InvalidOperationException ("CommandProperty.CommandType must be a concrete class for key: \"{0}\"".FormatWith (Key));
 
-            // initialize the command
-            if (InitializationMethod != null)
-            {
-                if (InitializationMethod.GetParameters ().Count () == 1)
-                {
-                    InitializationMethod.Invoke (InvokeOn, new[] { command });
-                }
-                else
-                {
-                    InitializationMethod.Invoke (InvokeOn, null);
-                }
-            }
-        }
+				if (CommandType.GetConstructor (new[] { executeDelegate.GetType (), canExecuteDelegate.GetType () }) != null)
+				{
+					command = Activator.CreateInstance (CommandType, executeDelegate, canExecuteDelegate);
+				}
+				else if (predicateType != null && CommandType.GetConstructor (new[] { executeDelegate.GetType (), predicateType }) != null)
+				{
+					canExecuteDelegate = CommandCanExecuteMethodAttribute.CreateCanExecutePredicateDelegate (CanExecuteMethod, ParameterType, InvokeOn);
+					command = Activator.CreateInstance (CommandType, executeDelegate, canExecuteDelegate);
+				}
+				else if (CommandType.GetConstructor (new[] { executeDelegate.GetType () }) != null)
+				{
+					command = Activator.CreateInstance (CommandType, executeDelegate);
+				}
+				else
+				{
+					throw new InvalidOperationException ("Unable to find suitable constructor of type {0} for key: \"{1}\""
+															 .FormatWith (CommandType.Name, Key));
+				}
+			}
+			else
+			{
+				// this line shouldn't ever be hit
+				throw new InvalidOperationException (String.Format ("Did not have an Command instantiation method for key: \"{0}\"", Key));
+			}
+			CommandProperty.SetValue (InvokeOn, command, null);
+
+			// initialize the command
+			if (InitializationMethod != null)
+			{
+				if (InitializationMethod.GetParameters ().Count () == 1)
+				{
+					InitializationMethod.Invoke (InvokeOn, new[] { command });
+				}
+				else
+				{
+					InitializationMethod.Invoke (InvokeOn, null);
+				}
+			}
+		}
 
         /// <summary>
         /// Wires up an entire object according to its usage of CommandWirerAttributes

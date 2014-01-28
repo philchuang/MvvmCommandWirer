@@ -89,7 +89,6 @@ namespace MvvmCommandWirer.UnitTests
         }
     }
 
-    
     public class when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute :
         when_using_MvvmCommandWirer_successfully<DelegateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_DelegateCommand_with_CommandInstantiationMethodAttribute.ViewModel>
     {
@@ -127,6 +126,57 @@ namespace MvvmCommandWirer.UnitTests
         }
 
         protected override DelegateCommand<String> GetCommandFromWireTarget () { return (DelegateCommand<String>) myWireTarget.FooCommand; }
+
+        protected override void AssertWireAllResultsMatch ()
+        {
+            Assert.IsNotNull (myWireAllResults);
+            Assert.AreEqual (1, myWireAllResults.Count);
+
+            var wirer = myWireAllResults[0];
+            Assert.AreEqual (typeof (ViewModel).GetProperty (Extensions.GetPropertyName (() => myWireTarget.FooCommand)), wirer.CommandProperty);
+            Assert.AreEqual (typeof (ViewModel).GetMethod (Extensions.GetMethodName (() => myWireTarget.CanFoo (null)), BindingFlags.NonPublic | BindingFlags.Instance), wirer.CanExecuteMethod);
+            Assert.AreEqual (typeof (ViewModel).GetMethod (Extensions.GetMethodName (() => myWireTarget.Foo (null)), BindingFlags.NonPublic | BindingFlags.Instance), wirer.ExecuteMethod);
+            Assert.AreEqual (typeof (ViewModel).GetMethod (Extensions.GetMethodName (() => myWireTarget.InstantiateFooCommand (null, null)), BindingFlags.NonPublic | BindingFlags.Instance), wirer.InstantiationMethod);
+        }
+    }
+
+    public class when_using_MvvmCommandWirer_with_parameterized_PredicateCommand_with_CommandInstantiationMethodAttribute :
+		when_using_MvvmCommandWirer_successfully<PredicateCommand<String>, when_using_MvvmCommandWirer_with_parameterized_PredicateCommand_with_CommandInstantiationMethodAttribute.ViewModel>
+    {
+        public class ViewModel : WireTargetBase
+        {
+            [CommandProperty(paramType: typeof (String))]
+            public ICommand FooCommand { get; set; }
+
+            [CommandInstantiationMethodAttribute]
+            internal PredicateCommand<String> InstantiateFooCommand (Action<String> execute, Predicate<String> canExecute)
+			{ return new PredicateCommand<String> (execute, canExecute); }
+
+            [CommandCanExecuteMethod]
+            internal bool CanFoo (String parameter)
+            {
+                CanExecuteCalled = true;
+                CanExecuteParameter = parameter;
+                return CanExecuteReturnValue;
+            }
+
+            public String FooParameter { get; set; }
+
+            [CommandExecuteMethod]
+            internal void Foo (String parameter)
+            {
+                ExecuteCalled = true;
+                ExecuteParameter = parameter;
+            }
+        }
+
+        protected override void Establish_context ()
+        {
+            base.Establish_context ();
+            myCommandParameter = Guid.NewGuid ().ToString ();
+        }
+
+		protected override PredicateCommand<String> GetCommandFromWireTarget () { return (PredicateCommand<String>) myWireTarget.FooCommand; }
 
         protected override void AssertWireAllResultsMatch ()
         {
