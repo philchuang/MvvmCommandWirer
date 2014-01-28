@@ -32,14 +32,6 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
         public MethodInfo ExecuteMethod { get; set; }
 
-        /* TODO TEST
-         * WHEN WIRING
-         * - CommandProperty is required
-         * - InvokeOn is required
-         * - CommandType OR InstantiationMethod is required
-         * - ExecuteMethod is required
-         */
-
         /// <summary>
         /// Wires up a single Command
         /// </summary>

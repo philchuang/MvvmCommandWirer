@@ -160,7 +160,7 @@ Implemented Features:
 
 Caveats:
 
-* If using `[CommandProperty]` attribute to instantiate, the specified Command Type needs to have a constructor like `(Action, Func<bool>)`, or `(Action<T>, Func<T,bool>)`. Otherwise, use the `[CommandInstantiationMethod]` attribute to declare the method that will instantiate the Command.
+* If using `[CommandProperty]` attribute to instantiate, the specified Command Type needs to have a constructor like `(Action, Func<bool>)`, or `(Action<T>, Func<T,bool>|Predicate<T>)`. Otherwise, use the `[CommandInstantiationMethod]` attribute to declare the method that will instantiate the Command.
 
 Shout-outs
 ----------

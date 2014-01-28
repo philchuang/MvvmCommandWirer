@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace Com.PhilChuang.Utils.MvvmCommandWirer
 {
+	/// <summary>
+	/// Base class for all CommandWirer attributes
+	/// </summary>
     public abstract class CommandWirerAttribute : Attribute
     {
         public String Key { get; protected set; }
@@ -26,10 +29,25 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         /// <returns></returns>
         public abstract void SetKeyFromMethodName(String methodName);
 
+		/// <summary>
+		/// Configures the given CommandWirer for the given PropertyInfo
+		/// </summary>
+		/// <param name="wirer"></param>
+		/// <param name="prop"></param>
         public abstract void Configure (CommandWirer wirer, PropertyInfo prop);
+
+		/// <summary>
+		/// Configures the given CommandWirer for the given MethodInfo
+		/// </summary>
+		/// <param name="wirer"></param>
+		/// <param name="method"></param>
         public abstract void Configure (CommandWirer wirer, MethodInfo method);
     }
 
+	/// <summary>
+	/// Decorates the ICommand-based property with getter/setter.
+	/// If not specified, Key is inferred via regex @"^(.+)Command$"
+	/// </summary>
     public class CommandPropertyAttribute : CommandWirerAttribute
     {
         public Type CommandType { get; private set; }
@@ -68,6 +86,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         }
     }
 
+	/// <summary>
+	/// Decorates the method used to instantiate the command.
+	/// The method can have 0 parameters, 1 parameter (Action|Action&lt;T&gt;), or 2 parameters (Action|Action&lt;T&gt;, Func&lt;bool&gt;|Func&lt;T, bool&gt;|Predicate&lt;T&gt;).
+	/// If not specified, Key is inferred via regexes @"^(?:Instantiate|Create)([A-Z].*?)(?:Command)?$" or @"^([A-Z].*?)(?:Command)?(?:Instantiate|Instantiation|Create)$"
+	/// </summary>
     public class CommandInstantiationMethodAttribute : CommandWirerAttribute
     {
         public CommandInstantiationMethodAttribute () { }
@@ -103,7 +126,8 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
             // TODO CONSIDER check that return type implements ICommand?
 
             var executeParameterType = wirer.ParameterType == null ? typeof (Action) : typeof (Action<>).MakeGenericType (wirer.ParameterType);
-            var canExecuteParameterType = wirer.ParameterType == null ? typeof (Func<>).MakeGenericType (typeof (bool)) : typeof (Func<,>).MakeGenericType (wirer.ParameterType, typeof (bool));
+            var canExecuteFuncParameterType = wirer.ParameterType == null ? typeof (Func<>).MakeGenericType (typeof (bool)) : typeof (Func<,>).MakeGenericType (wirer.ParameterType, typeof (bool));
+            var canExecutePredicateParameterType = wirer.ParameterType == null ? null : typeof (Predicate<>).MakeGenericType (wirer.ParameterType);
 
             if (!method.GetParameters ().Any ())
             {
@@ -122,6 +146,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
                     throw new InvalidOperationException (
                         "CommandInstantiationMethodAttribute target \"{0}\" must have parameters: ({1} commandExecute, {2} commandCanExecute)."
                             .FormatWith (method.Name, wirer.ParameterType == null ? "Action" : "Action<{0}>".FormatWith (wirer.ParameterType.Name), wirer.ParameterType == null ? "Func<bool>" : "Func<{0}, bool>".FormatWith (wirer.ParameterType.Name)));
+				if (method.GetParameters ().ElementAt (1).ParameterType != canExecuteFuncParameterType
+					&& (canExecutePredicateParameterType != null && method.GetParameters ().ElementAt (1).ParameterType != canExecutePredicateParameterType))
+                    throw new InvalidOperationException (
+                        "CommandInstantiationMethodAttribute target \"{0}\" must have parameters: ({1} commandExecute, {2} commandCanExecute)."
+                            .FormatWith (method.Name, wirer.ParameterType == null ? "Action" : "Action<{0}>".FormatWith (wirer.ParameterType.Name), wirer.ParameterType == null ? "Func<bool>" : "Func<{0}, bool>|Predicate<{0}>".FormatWith (wirer.ParameterType.Name)));
             }
             else
             {
@@ -134,6 +163,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         }
     }
 
+	/// <summary>
+	/// Decorates the method used to initialize the command.
+	/// The method can have 0 parameters, or 1 parameter compatible with the CommandType.
+	/// If not specified, Key is inferred via regexes @"^(?:Initialize|Init)([A-Z].*?)(?:Command)?$" or @"^([A-Z].*?)(?:Command)?(?:Initialize|Init)$"
+	/// </summary>
     public class CommandInitializationMethodAttribute : CommandWirerAttribute
     {
         public CommandInitializationMethodAttribute() { }
@@ -175,6 +209,12 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
         }
     }
 
+	/// <summary>
+	/// Decorates the method or property used for the CanExecute command constructor parameter.
+	/// If a property, it cannot have indexers. If a method, it can have 0 parameters, or 1 parameter of ParameterType.
+	/// The property/method return value must be bool.
+	/// If not specified, Key is inferred via regex @"^(?:CanExecute|Can)([A-Z].*)$"
+	/// </summary>
     public class CommandCanExecuteMethodAttribute : CommandWirerAttribute
     {
         public CommandCanExecuteMethodAttribute() { }
@@ -309,6 +349,11 @@ namespace Com.PhilChuang.Utils.MvvmCommandWirer
 
     }
 
+	/// <summary>
+	/// Decorates the method used for the Execute commmand constructor parameter.
+	/// The method can have 0 parameters, or 1 parameter of ParameterType.
+	/// If not specified, Key is inferred via regex @"^(?:Execute|Do)([A-Z].*)$"
+	/// </summary>
     public class CommandExecuteMethodAttribute : CommandWirerAttribute
     {
         public CommandExecuteMethodAttribute() { }
